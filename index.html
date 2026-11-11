@@ -2,524 +2,630 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>RutaCuadre Pro</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#030712" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    body {
-      background-color: #030712;
-      color: #f8fafc;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      padding-bottom: env(safe-area-inset-bottom);
+    :root {
+      --bg: #030712;
+      --card: #0f172a;
+      --card-2: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --amber: #fbbf24;
+      --emerald: #34d399;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --orange: #fb923c;
     }
-    .safe-bottom {
-      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: calc(95px + env(safe-area-inset-bottom)); }
+    .container { max-width: 520px; margin: 0 auto; }
+    
+    /* Header & Tablero */
+    header { background: var(--card); border-bottom: 1px solid #1e293b; border-radius: 0 0 24px 24px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .route-btn { background: none; border: none; color: var(--text); text-align: left; cursor: pointer; }
+    .route-title { font-size: 16px; font-weight: 900; color: var(--amber); text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+    .route-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .debt-pill { background: #450a0a; border: 1px solid #b91c1c; padding: 6px 12px; border-radius: 14px; text-align: right; color: #fecaca; cursor: pointer; }
+    .debt-pill small { display: block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #fca5a5; }
+    .debt-pill strong { font-size: 14px; font-weight: 900; color: var(--red); }
+
+    .master-box { background: var(--bg); border: 1px solid #1e293b; border-radius: 18px; padding: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .master-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); }
+    .master-val { font-size: 30px; font-weight: 900; color: var(--emerald); line-height: 1.1; margin-top: 2px; }
+    .master-val span { font-size: 12px; color: var(--muted); }
+    .master-side { text-align: right; font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .master-side b { color: var(--text); }
+
+    .drawers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+    .drawer { background: rgba(30,41,59,0.85); border: 1px solid var(--border); padding: 8px 4px; border-radius: 12px; }
+    .drawer small { display: block; font-size: 10px; font-weight: 800; margin-bottom: 2px; }
+    .drawer strong { font-size: 14px; font-weight: 900; color: #fff; }
+
+    /* Main */
+    main { padding: 16px; }
+    .sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .sec-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+    .reset-btn { background: none; border: none; color: var(--amber); font-size: 12px; font-weight: 800; padding: 4px 8px; cursor: pointer; }
+
+    .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .cat-btn { min-height: 82px; border-radius: 18px; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; cursor: pointer; transition: transform 0.1s; }
+    .cat-btn:active { transform: scale(0.96); }
+    .cat-btn .emo { font-size: 28px; margin-bottom: 4px; }
+    .cat-comida { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.55); color: #fcd34d; }
+    .cat-caleta { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.55); color: #93c5fd; }
+    .cat-mantenimiento { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.55); color: #fdba74; }
+    .cat-peaje { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.55); color: #6ee7b7; }
+
+    /* Lista Gastos */
+    .exp-list { display: flex; flex-direction: column; gap: 8px; }
+    .exp-item { background: var(--card); border: 1px solid #1e293b; border-radius: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .exp-left { display: flex; align-items: center; gap: 10px; }
+    .exp-emo { font-size: 24px; }
+    .exp-note { font-size: 14px; font-weight: 800; color: #fff; }
+    .exp-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .exp-right { display: flex; align-items: center; gap: 10px; text-align: right; }
+    .exp-usd { font-size: 14px; font-weight: 900; color: var(--amber); }
+    .exp-orig { font-size: 11px; color: var(--muted); }
+    .del-btn { background: none; border: none; color: #64748b; font-size: 16px; font-weight: 900; padding: 6px; cursor: pointer; }
+
+    /* Footer */
+    nav.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 520px; margin: 0 auto; background: rgba(15,23,42,0.96); border-top: 1px solid #1e293b; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; z-index: 40; }
+    .nav-side { min-height: 56px; padding: 0 12px; background: none; border: none; color: var(--text); font-size: 11px; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+    .nav-side span:first-child { font-size: 20px; margin-bottom: 2px; }
+    .nav-voice { min-height: 56px; background: var(--amber); color: #030712; border: none; border-radius: 999px; padding: 0 24px; font-size: 14px; font-weight: 900; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(251,191,36,0.3); cursor: pointer; }
+
+    /* Modales */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.82); display: none; align-items: flex-end; justify-content: center; padding: 12px; z-index: 50; }
+    .modal-backdrop.active { display: flex; }
+    .modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .modal-title { font-size: 15px; font-weight: 900; color: var(--amber); text-transform: uppercase; }
+    .close-btn { background: none; border: none; color: var(--muted); font-size: 20px; font-weight: 800; padding: 4px 8px; cursor: pointer; }
+
+    .curr-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .curr-tab { min-height: 46px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-2); color: var(--text); font-size: 12px; font-weight: 900; cursor: pointer; }
+    .curr-tab.active { background: var(--amber); color: #030712; border-color: var(--amber); }
+
+    .big-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 12px; font-size: 28px; font-weight: 900; text-align: center; color: #fff; margin-bottom: 8px; }
+    .small-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px; font-size: 14px; font-weight: 800; color: #fff; margin-top: 4px; }
+    .eq-hint { text-align: center; font-size: 12px; font-weight: 800; color: var(--emerald); margin-bottom: 10px; min-height: 18px; }
+
+    .bills-row { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; }
+    .bill-btn { flex: 1; min-height: 42px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; color: var(--amber); font-size: 12px; font-weight: 900; cursor: pointer; }
+
+    .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .tag-btn { background: var(--card-2); border: 1px solid var(--border); color: #cbd5e1; padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .tag-btn.active { background: var(--amber); color: #030712; border-color: var(--amber); font-weight: 900; }
+
+    .switch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .sw-btn { min-height: 48px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-2); color: var(--text); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; text-align: center; padding: 4px; }
+    .sw-btn.driver-active { background: #450a0a; border-color: #ef4444; color: #fecaca; }
+    .sw-btn.receipt-active { background: #172554; border-color: #3b82f6; color: #bfdbfe; }
+
+    .primary-btn { width: 100%; min-height: 54px; background: var(--amber); color: #030712; border: none; border-radius: 16px; font-size: 14px; font-weight: 900; cursor: pointer; }
+    .success-btn { width: 100%; min-height: 54px; background: #10b981; color: #030712; border: none; border-radius: 16px; font-size: 14px; font-weight: 900; cursor: pointer; }
+    .danger-btn { width: 100%; min-height: 44px; background: rgba(127,29,29,0.4); border: 1px solid #b91c1c; color: #fca5a5; border-radius: 12px; font-size: 12px; font-weight: 800; margin-top: 12px; cursor: pointer; }
+
+    /* Ticket Recibo */
+    .ticket { background: #fff; color: #0f172a; border-radius: 22px; padding: 20px; width: 100%; max-width: 400px; }
+    .ticket-line { display: flex; justify-content: space-between; font-size: 12px; margin: 6px 0; }
+    .ticket-sep { border-top: 1px dashed #cbd5e1; margin: 10px 0; }
+    .ticket-res { padding: 12px; border-radius: 14px; text-align: center; margin: 12px 0; background: #ecfdf5; color: #064e3b; }
   </style>
 </head>
 <body>
-  <div id="root">
-    <!-- App Shell Skeleton para arranque en frío (Agente 2) -->
-    <div style="max-width:448px;margin:0 auto;padding:20px;color:#94a3b8;font-family:sans-serif;text-align:center;margin-top:40px;">
-      <div style="font-size:42px;margin-bottom:12px;">🚛</div>
-      <div style="font-weight:900;color:#fbbf24;font-size:18px;">RUTACUADRE PRO</div>
-      <div style="font-size:12px;margin-top:6px;">Cargando bitácora de viaje offline...</div>
+  <div class="container">
+    <header>
+      <div class="top-row">
+        <button class="route-btn" onclick="openSettings()">
+          <div class="route-title">🚛 <span id="lbl-route">El Vigía - Valencia</span> ⚙️</div>
+          <div class="route-sub" id="lbl-rates">Tasa: 4000 COP | 50 Bs (Toca para ajustar)</div>
+        </button>
+        <div class="debt-pill" onclick="openDebts()">
+          <small>Me deben</small>
+          <strong id="lbl-owed">$15.00</strong>
+        </div>
+      </div>
+
+      <div class="master-box">
+        <div>
+          <div class="master-label">Fondo Disponible (Unificado)</div>
+          <div class="master-val"><span id="lbl-rem" style="font-size:30px;color:#34d399;">$0.00</span> <span>USD</span></div>
+        </div>
+        <div class="master-side">
+          <div>Anticipo: <b id="lbl-ant">$0.00</b></div>
+          <div>Gastado: <b id="lbl-spent" style="color:#fbbf24;">-$0.00</b></div>
+        </div>
+      </div>
+
+      <div class="drawers">
+        <div class="drawer">
+          <small style="color:#34d399;">💵 Efectivo USD</small>
+          <strong id="gav-usd">$140</strong>
+        </div>
+        <div class="drawer">
+          <small style="color:#facc15;">🇨🇴 Pesos COP</small>
+          <strong id="gav-cop">160 mil</strong>
+        </div>
+        <div class="drawer">
+          <small style="color:#38bdf8;">🇻🇪 Bolívares</small>
+          <strong id="gav-ves">Bs 1500</strong>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="sec-head">
+        <span class="sec-title">Registrar Gasto (1 Toque)</span>
+        <button class="reset-btn" onclick="resetTrip()">🔄 Nuevo Viaje</button>
+      </div>
+
+      <div class="cat-grid">
+        <button class="cat-btn cat-comida" onclick="openExpenseModal('comida')">
+          <span class="emo">🍔</span><span>Comida / Refresco</span>
+        </button>
+        <button class="cat-btn cat-caleta" onclick="openExpenseModal('caleta')">
+          <span class="emo">📦</span><span>Caleta / Obreros</span>
+        </button>
+        <button class="cat-btn cat-mantenimiento" onclick="openExpenseModal('mantenimiento')">
+          <span class="emo">🔧</span><span>Mantenimiento</span>
+        </button>
+        <button class="cat-btn cat-peaje" onclick="openExpenseModal('peaje')">
+          <span class="emo">⛽</span><span>Peaje / Gasoil</span>
+        </button>
+      </div>
+
+      <div class="sec-head">
+        <span class="sec-title" id="lbl-exp-count">Bitácora de Ruta (0)</span>
+      </div>
+      <div class="exp-list" id="exp-list"></div>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-side" onclick="openVuelto()">
+        <span>🔄</span><span>Vuelto</span>
+      </button>
+      <button class="nav-voice" onclick="openVoice()">
+        <span>🎙️</span><span>NOTA VOZ</span>
+      </button>
+      <button class="nav-side" style="color:#34d399;" onclick="openCuadre()">
+        <span>🧾</span><span>Cuadre</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL GASTO -->
+  <div class="modal-backdrop" id="modal-exp">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title" id="exp-modal-title">🍔 Comida</span>
+        <button class="close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="curr-tabs">
+        <button class="curr-tab active" id="tab-USD" onclick="setExpCurr('USD')">💵 Dólares</button>
+        <button class="curr-tab" id="tab-COP" onclick="setExpCurr('COP')">🇨🇴 Pesos</button>
+        <button class="curr-tab" id="tab-VES" onclick="setExpCurr('VES')">🇻🇪 Bolívares</button>
+      </div>
+      <input type="number" id="inp-exp-amt" class="big-input" placeholder="0.00" oninput="updateEqHint()" />
+      <div class="eq-hint" id="lbl-eq-hint"></div>
+      <div class="bills-row" id="bills-row"></div>
+      <div class="tags-wrap" id="tags-wrap"></div>
+      <div class="switch-row">
+        <button class="sw-btn" id="btn-sw-driver" onclick="toggleDriver()">🚛 Plata del Viaje</button>
+        <label class="sw-btn" id="btn-sw-receipt">
+          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="markReceiptAttached()" />
+          <span id="lbl-sw-receipt">📷 Foto / Recibo</span>
+        </label>
+      </div>
+      <button class="primary-btn" onclick="saveExpense()">GUARDAR GASTO</button>
+    </div>
+  </div>
+
+  <!-- MODAL VUELTO -->
+  <div class="modal-backdrop" id="modal-vuelto">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">🔄 Calculadora de Vuelto</span>
+        <button class="close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px;color:#94a3b8;">Billete entregado ($)</label>
+          <input type="number" id="v-bill" class="small-input" value="20" oninput="calcVueltoPreview()" />
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;">Costo del gasto ($)</label>
+          <input type="number" id="v-cost" class="small-input" value="6" oninput="calcVueltoPreview()" />
+        </div>
+      </div>
+      <div style="background:#030712;padding:10px;border-radius:12px;text-align:center;font-size:12px;margin-bottom:12px;">
+        Vuelto a recibir: <b style="color:#34d399;" id="lbl-v-diff">$14.00 USD</b>
+      </div>
+      <div style="font-size:12px;font-weight:800;margin-bottom:6px;">¿Cómo te dieron el vuelto?</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+        <div>
+          <small style="font-size:10px;color:#34d399;">Billetes $</small>
+          <input type="number" id="v-ret-usd" class="small-input" value="10" />
+        </div>
+        <div>
+          <small style="font-size:10px;color:#facc15;">Pesos COP</small>
+          <input type="number" id="v-ret-cop" class="small-input" value="16000" />
+        </div>
+        <div>
+          <small style="font-size:10px;color:#38bdf8;">En Bs</small>
+          <input type="number" id="v-ret-ves" class="small-input" value="0" />
+        </div>
+      </div>
+      <button class="success-btn" onclick="applyVuelto()">APLICAR VUELTO Y ANOTAR GASTO</button>
+    </div>
+  </div>
+
+  <!-- MODAL CUADRE -->
+  <div class="modal-backdrop" id="modal-cuadre" style="align-items:center;">
+    <div class="ticket">
+      <div class="modal-head" style="border-bottom:1px dashed #cbd5e1;padding-bottom:8px;">
+        <div>
+          <div style="font-weight:900;font-size:15px;">🧾 RECIBO DE LIQUIDACIÓN</div>
+          <div style="font-size:11px;color:#64748b;" id="t-route">El Vigía - Valencia</div>
+        </div>
+        <button class="close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div class="ticket-line"><span>Anticipo Total (Unificado):</span><b id="t-ant">$0.00 USD</b></div>
+      <div class="ticket-line" style="color:#b91c1c;"><span>Total Gastado en Ruta:</span><b id="t-spent">-$0.00 USD</b></div>
+      <div class="ticket-line" style="color:#047857;font-weight:800;"><span>Sobrante del Viaje:</span><span id="t-rem">$0.00 USD</span></div>
+      <div class="ticket-sep"></div>
+      <div style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;">Cruce con Bolsillo del Chofer:</div>
+      <div class="ticket-line"><span>Puesto de Mi Bolsillo:</span><b id="t-pocket">+$0.00</b></div>
+      <div class="ticket-line"><span>Deudas Anteriores ("Me deben"):</span><b id="t-debts">+$0.00</b></div>
+      <div class="ticket-res">
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;">Balance Final</div>
+        <div style="font-size:16px;font-weight:900;margin-top:2px;" id="t-final">CHOFER ENTREGA: $0.00</div>
+      </div>
+      <button class="success-btn" style="color:#fff;background:#059669;" onclick="sendWhatsApp()">📤 ENVIAR CUADRE POR WHATSAPP</button>
+    </div>
+  </div>
+
+  <!-- MODAL AJUSTES -->
+  <div class="modal-backdrop" id="modal-settings" style="align-items:center;">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">⚙️ Configurar Viaje y Tasas</span>
+        <button class="close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;color:#cbd5e1;">Nombre de la Ruta</label>
+        <input type="text" id="set-route" class="small-input" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div>
+          <label style="font-size:11px;color:#facc15;">Tasa COP por 1 USD</label>
+          <input type="number" id="set-cop" class="small-input" />
+        </div>
+        <div>
+          <label style="font-size:11px;color:#38bdf8;">Tasa Bs por 1 USD</label>
+          <input type="number" id="set-ves" class="small-input" />
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:800;color:#34d399;margin-bottom:6px;">Anticipo Recibido en Mano:</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+        <div>
+          <small style="font-size:10px;color:#cbd5e1;">Dólares ($)</small>
+          <input type="number" id="set-adv-usd" class="small-input" />
+        </div>
+        <div>
+          <small style="font-size:10px;color:#cbd5e1;">Pesos (COP)</small>
+          <input type="number" id="set-adv-cop" class="small-input" />
+        </div>
+        <div>
+          <small style="font-size:10px;color:#cbd5e1;">Bolívares (Bs)</small>
+          <input type="number" id="set-adv-ves" class="small-input" />
+        </div>
+      </div>
+      <button class="primary-btn" onclick="saveSettings()">GUARDAR CAMBIOS</button>
+      <button class="danger-btn" onclick="deleteAllData()">🗑️ Eliminar cuenta y borrar todos los datos</button>
+    </div>
+  </div>
+
+  <!-- MODAL DEUDAS -->
+  <div class="modal-backdrop" id="modal-debts" style="align-items:center;">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title" style="color:#f87171;">📂 Cuentas Pendientes ("Me deben")</span>
+        <button class="close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <div id="debts-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+      <button class="primary-btn" onclick="addDebtPrompt()">+ AGREGAR DEUDA ANTERIOR</button>
+    </div>
+  </div>
+
+  <!-- MODAL VOZ -->
+  <div class="modal-backdrop" id="modal-voice">
+    <div class="modal-card" style="text-align:center;">
+      <div style="font-size:38px;margin-bottom:6px;">🎙️</div>
+      <div class="modal-title" style="margin-bottom:6px;">Dictado Rápido de Ruta</div>
+      <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;">Toca un comando rápido de voz para registrarlo:</p>
+      <div style="display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:12px;">
+        <button class="sw-btn" style="justify-content:flex-start;padding:12px;" onclick="quickVoice('caleta','USD',15,'Caleta en descarga',false)">📦 "Pagué $15 de caleta en descarga"</button>
+        <button class="sw-btn" style="justify-content:flex-start;padding:12px;" onclick="quickVoice('comida','COP',20000,'Almuerzo y refresco',false)">🍔 "Gasté 20 mil pesos en almuerzo y refresco"</button>
+        <button class="sw-btn" style="justify-content:flex-start;padding:12px;" onclick="quickVoice('mantenimiento','USD',10,'Cauchera en ruta',true)">🔧 "Puse $10 de mi bolsillo para cauchera"</button>
+      </div>
+      <button class="close-btn" style="font-size:13px;" onclick="closeModals()">Cancelar</button>
     </div>
   </div>
 
   <script>
-    // Registro de Service Worker para modo Offline en carretera (Agente 11)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-      });
+    const CATS = {
+      comida: { name: 'Comida / Refresco', emo: '🍔', tags: ['Almuerzo', 'Refresco y Agua', 'Desayuno', 'Cena', 'Café y Pan'] },
+      caleta: { name: 'Caleta / Obreros', emo: '📦', tags: ['Descarga camión', 'Carga mercado', 'Trasbordo', 'Ayudante'] },
+      mantenimiento: { name: 'Mantenimiento', emo: '🔧', tags: ['Cauchera / Parche', 'Aceite / Liga', 'Repuesto', 'Lavado'] },
+      peaje: { name: 'Peaje / Gasoil', emo: '⛽', tags: ['Peaje autopista', 'Surtido Gasoil', 'Estacionamiento'] }
+    };
+    const BILLS = {
+      USD: [{l:'+$1',v:1},{l:'+$5',v:5},{l:'+$10',v:10},{l:'+$20',v:20}],
+      COP: [{l:'+2k',v:2000},{l:'+5k',v:5000},{l:'+10k',v:10000},{l:'+20k',v:20000},{l:'+50k',v:50000}],
+      VES: [{l:'+50',v:50},{l:'+100',v:100},{l:'+200',v:200},{l:'+500',v:500}]
+    };
+
+    function load(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
+    function save(k, val) { try { localStorage.setItem(k, JSON.stringify(val)); } catch(e) {} }
+
+    let trip = load('rc_trip', { route: 'El Vigía - Valencia', rateCOP: 4000, rateVES: 50 });
+    let advance = load('rc_advance', { USD: 140, COP: 160000, VES: 1500 });
+    let walletAdj = load('rc_walletAdj', { USD: 0, COP: 0, VES: 0 });
+    let debts = load('rc_debts', [{ id: 'd1', title: 'Viaje anterior - Repuesto', amountUSD: 15.0, settled: false }]);
+    let expenses = load('rc_expenses', [
+      { id: '1', category: 'caleta', note: 'Carga inicial de mercancía', currency: 'USD', amount: 20, usdEq: 20.0, fromDriver: false, hasReceipt: false, time: '06:30 AM' },
+      { id: '2', category: 'comida', note: 'Desayuno y refrescos', currency: 'COP', amount: 24000, usdEq: 6.0, fromDriver: false, hasReceipt: false, time: '09:15 AM' }
+    ]);
+
+    let curCat = 'comida', curCurr = 'USD', curNote = '', curDriver = false, curReceipt = false;
+
+    function toUSD(amt, curr) {
+      const n = Number(amt) || 0;
+      if (curr === 'USD') return n;
+      if (curr === 'COP') return n / (trip.rateCOP || 4000);
+      if (curr === 'VES') return n / (trip.rateVES || 50);
+      return n;
     }
-  </script>
 
-  <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
-
-    const CATEGORIES = {
-      comida: { id: 'comida', name: 'Comida / Refresco', emoji: '🍔', border: 'border-amber-500/60', bg: 'bg-amber-500/15', text: 'text-amber-300', tags: ['Almuerzo', 'Refresco / Agua', 'Desayuno', 'Cena', 'Café y Pan'] },
-      caleta: { id: 'caleta', name: 'Caleta / Obreros', emoji: '📦', border: 'border-blue-500/60', bg: 'bg-blue-500/15', text: 'text-blue-300', tags: ['Descarga camión', 'Carga mercado', 'Trasbordo', 'Ayudante extra'] },
-      mantenimiento: { id: 'mantenimiento', name: 'Mantenimiento', emoji: '🔧', border: 'border-orange-500/60', bg: 'bg-orange-500/15', text: 'text-orange-300', tags: ['Cauchera / Parche', 'Aceite / Liga', 'Repuesto ruta', 'Lavado'] },
-      peaje: { id: 'peaje', name: 'Peaje / Gasoil', emoji: '⛽', border: 'border-emerald-500/60', bg: 'bg-emerald-500/15', text: 'text-emerald-300', tags: ['Peaje autopista', 'Surtido Gasoil', 'Alcabala / Control', 'Estacionamiento'] }
-    };
-
-    const QUICK_BILLS = {
-      USD: [{ l: '+$1', v: 1 }, { l: '+$5', v: 5 }, { l: '+$10', v: 10 }, { l: '+$20', v: 20 }],
-      COP: [{ l: '+2k', v: 2000 }, { l: '+5k', v: 5000 }, { l: '+10k', v: 10000 }, { l: '+20k', v: 20000 }, { l: '+50k', v: 50000 }],
-      VES: [{ l: '+50', v: 50 }, { l: '+100', v: 100 }, { l: '+200', v: 200 }, { l: '+500', v: 500 }]
-    };
-
-    function App() {
-      const loadState = (key, fallback) => {
-        try { const saved = localStorage.getItem(key); return saved ? JSON.parse(saved) : fallback; } catch { return fallback; }
-      };
-
-      const [trip, setTrip] = useState(() => loadState('rc_trip', { route: 'El Vigía - Valencia', rateCOP: 4000, rateVES: 50 }));
-      const [advance, setAdvance] = useState(() => loadState('rc_advance', { USD: 140, COP: 160000, VES: 1500 }));
-      const [walletAdj, setWalletAdj] = useState(() => loadState('rc_walletAdj', { USD: 0, COP: 0, VES: 0 }));
-      const [pendingDebts, setPendingDebts] = useState(() => loadState('rc_debts', [{ id: 'd1', title: 'Viaje anterior - Repuesto', amountUSD: 15.0, settled: false }]));
-      const [expenses, setExpenses] = useState(() => loadState('rc_expenses', [
-        { id: '1', category: 'caleta', note: 'Carga inicial de mercancía', currency: 'USD', amount: 20, usdEq: 20.0, fromDriver: false, hasReceipt: false, time: '06:30 AM' },
-        { id: '2', category: 'comida', note: 'Desayuno y refrescos', currency: 'COP', amount: 24000, usdEq: 6.0, fromDriver: false, hasReceipt: false, time: '09:15 AM' }
-      ]));
-
-      // Persistencia contra Process Death al abrir cámara (Agente 12)
-      const [draft, setDraft] = useState(() => loadState('rc_draft', { activeCat: null, expCurr: 'USD', expAmt: '', expNote: '', expDriver: false, expReceipt: false }));
-      const [isSaving, setIsSaving] = useState(false); // Bloqueo Rapid Tap (Agente 4)
-
-      const [showVuelto, setShowVuelto] = useState(false);
-      const [showCuadre, setShowCuadre] = useState(false);
-      const [showSettings, setShowSettings] = useState(false);
-      const [showDebts, setShowDebts] = useState(false);
-      const [showVoice, setShowVoice] = useState(false);
-
-      const [vBill, setVBill] = useState(20);
-      const [vCost, setVCost] = useState(6);
-      const [vRetUSD, setVRetUSD] = useState(10);
-      const [vRetCOP, setVRetCOP] = useState(16000);
-      const [vRetVES, setVRetVES] = useState(0);
-
-      useEffect(() => { localStorage.setItem('rc_trip', JSON.stringify(trip)); }, [trip]);
-      useEffect(() => { localStorage.setItem('rc_advance', JSON.stringify(advance)); }, [advance]);
-      useEffect(() => { localStorage.setItem('rc_walletAdj', JSON.stringify(walletAdj)); }, [walletAdj]);
-      useEffect(() => { localStorage.setItem('rc_debts', JSON.stringify(pendingDebts)); }, [pendingDebts]);
-      useEffect(() => { localStorage.setItem('rc_expenses', JSON.stringify(expenses)); }, [expenses]);
-      useEffect(() => { localStorage.setItem('rc_draft', JSON.stringify(draft)); }, [draft]);
-
-      const toUSD = (amt, curr) => {
-        const n = Number(amt) || 0;
-        if (curr === 'USD') return n;
-        if (curr === 'COP') return n / (trip.rateCOP || 4000);
-        if (curr === 'VES') return n / (trip.rateVES || 50);
-        return n;
-      };
-
-      const gavetas = useMemo(() => {
-        let u = advance.USD + walletAdj.USD;
-        let c = advance.COP + walletAdj.COP;
-        let v = advance.VES + walletAdj.VES;
-        expenses.forEach(e => {
-          if (!e.fromDriver) {
-            if (e.currency === 'USD') u -= e.amount;
-            if (e.currency === 'COP') c -= e.amount;
-            if (e.currency === 'VES') v -= e.amount;
-          }
-        });
-        return { USD: u, COP: c, VES: v };
-      }, [advance, walletAdj, expenses]);
-
-      const totals = useMemo(() => {
-        const antUSD = advance.USD + toUSD(advance.COP, 'COP') + toUSD(advance.VES, 'VES');
-        const spentTotal = expenses.reduce((s, e) => s + e.usdEq, 0);
-        const driverPocket = expenses.filter(e => e.fromDriver).reduce((s, e) => s + e.usdEq, 0);
-        const spentFromTrip = spentTotal - driverPocket;
-        const remainingTrip = antUSD - spentFromTrip;
-        const oldDebts = pendingDebts.filter(d => !d.settled).reduce((s, d) => s + d.amountUSD, 0);
-        const totalOwedToDriver = driverPocket + oldDebts;
-        const netFinal = remainingTrip - totalOwedToDriver;
-        return { antUSD, spentTotal, driverPocket, remainingTrip, oldDebts, totalOwedToDriver, netFinal };
-      }, [advance, expenses, pendingDebts, trip]);
-
-      const openCat = (id) => {
-        setDraft({ activeCat: id, expCurr: 'USD', expAmt: '', expNote: '', expDriver: false, expReceipt: id === 'mantenimiento' || id === 'peaje' });
-      };
-
-      // Guardado idempotente contra toques repetidos (Agente 4)
-      const saveExpense = () => {
-        if (isSaving) return;
-        const val = parseFloat(draft.expAmt);
-        if (!val || val <= 0) return;
-        setIsSaving(true);
-        const eq = Number(toUSD(val, draft.expCurr).toFixed(2));
-        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setExpenses(prev => [{
-          id: Date.now().toString(),
-          category: draft.activeCat,
-          note: draft.expNote.trim() || CATEGORIES[draft.activeCat].name,
-          currency: draft.expCurr,
-          amount: val,
-          usdEq: eq,
-          fromDriver: draft.expDriver,
-          hasReceipt: draft.expReceipt,
-          time: now
-        }, ...prev]);
-        setDraft({ activeCat: null, expCurr: 'USD', expAmt: '', expNote: '', expDriver: false, expReceipt: false });
-        setTimeout(() => setIsSaving(false), 350);
-      };
-
-      const applyVuelto = () => {
-        const cost = Number(vCost) || 0;
-        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setWalletAdj({
-          USD: walletAdj.USD - Number(vBill) + Number(vRetUSD) + cost,
-          COP: walletAdj.COP + Number(vRetCOP),
-          VES: walletAdj.VES + Number(vRetVES)
-        });
-        setExpenses([{
-          id: Date.now().toString(),
-          category: 'comida',
-          note: `Pago con billete $${vBill} (Vuelto mixto)`,
-          currency: 'USD',
-          amount: cost,
-          usdEq: cost,
-          fromDriver: false,
-          hasReceipt: false,
-          time: now
-        }, ...expenses]);
-        setShowVuelto(false);
-      };
-
-      // Cumplimiento Google Play Data Safety: Borrado total de cuenta y datos (Agente 17)
-      const handleDeleteAllData = () => {
-        if (confirm('¿Estás seguro de eliminar todos los datos guardados y restablecer la aplicación de fábrica? Esta acción no se puede deshacer.')) {
-          localStorage.clear();
-          window.location.reload();
+    function getStats() {
+      let gUSD = advance.USD + walletAdj.USD;
+      let gCOP = advance.COP + walletAdj.COP;
+      let gVES = advance.VES + walletAdj.VES;
+      expenses.forEach(e => {
+        if (!e.fromDriver) {
+          if (e.currency === 'USD') gUSD -= e.amount;
+          if (e.currency === 'COP') gCOP -= e.amount;
+          if (e.currency === 'VES') gVES -= e.amount;
         }
-      };
-
-      const sendWhatsApp = () => {
-        const text = `🚛 *LIQUIDACIÓN DE VIAJE - RUTACUADRE PRO*\n📍 *Ruta:* ${trip.route}\n💱 *Tasas:* ${trip.rateCOP} COP/$ | ${trip.rateVES} Bs/$\n\n💵 *Anticipo Unificado:* $${totals.antUSD.toFixed(2)} USD\n📉 *Total Gastado:* -$${totals.spentTotal.toFixed(2)} USD\n💰 *Sobrante de Viaje:* $${totals.remainingTrip.toFixed(2)} USD\n\n👛 *Puesto del Bolsillo del Chofer:* +$${totals.driverPocket.toFixed(2)}\n📂 *Cuentas Pendientes Anteriores:* +$${totals.oldDebts.toFixed(2)}\n\n⚖️ *BALANCE FINAL:* ${totals.netFinal >= 0 ? `El chofer entrega $${totals.netFinal.toFixed(2)} USD` : `FAVOR REEMBOLSAR AL CHOFER: $${Math.abs(totals.netFinal).toFixed(2)} USD`}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-      };
-
-      return (
-        <div className="max-w-xl mx-auto min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans pb-28">
-          <header className="p-4 bg-slate-900 border-b border-slate-800 rounded-b-3xl shadow-xl">
-            <div className="flex justify-between items-center mb-3">
-              <button onClick={() => setShowSettings(true)} className="text-left">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg">🚛</span>
-                  <h1 className="text-base font-black tracking-wide text-amber-400 uppercase">{trip.route}</h1>
-                  <span className="text-xs text-slate-300">⚙️</span>
-                </div>
-                <p className="text-xs text-slate-300">Tasa: {trip.rateCOP} COP | {trip.rateVES} Bs (Ajustar)</p>
-              </button>
-              <button onClick={() => setShowDebts(true)} className="bg-red-950 border border-red-700 px-3.5 py-2 rounded-2xl text-right active:scale-95 transition">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-red-200">Me deben</span>
-                <span className="text-sm font-black text-red-300">${totals.totalOwedToDriver.toFixed(2)}</span>
-              </button>
-            </div>
-
-            <div className="bg-[#030712] p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center mb-3">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300 block">Fondo Disponible (Unificado)</span>
-                <div className="text-3xl font-black text-emerald-400">${totals.remainingTrip.toFixed(2)} <span className="text-xs text-slate-300">USD</span></div>
-              </div>
-              <div className="text-right text-xs text-slate-300 space-y-0.5">
-                <div>Anticipo: <b className="text-white">${totals.antUSD.toFixed(2)}</b></div>
-                <div>Gastado: <b className="text-amber-400">-${totals.spentTotal.toFixed(2)}</b></div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
-                <span className="text-[11px] text-emerald-300 font-bold block">💵 Efectivo USD</span>
-                <span className="font-black text-sm text-white">${gavetas.USD.toFixed(0)}</span>
-              </div>
-              <div className="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
-                <span className="text-[11px] text-yellow-300 font-bold block">🇨🇴 Pesos COP</span>
-                <span className="font-black text-sm text-white">{(gavetas.COP / 1000).toFixed(0)} mil</span>
-              </div>
-              <div className="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
-                <span className="text-[11px] text-sky-300 font-bold block">🇻🇪 Bolívares</span>
-                <span className="font-black text-sm text-white">Bs {gavetas.VES.toFixed(0)}</span>
-              </div>
-            </div>
-          </header>
-
-          <main className="p-4 flex-1">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-300">Registrar Gasto (Botones >= 56dp)</h2>
-              <button onClick={() => { if(confirm('¿Deseas iniciar un nuevo viaje en limpio?')) setExpenses([]); }} className="text-xs text-amber-400 font-bold py-1 px-2">🔄 Nuevo Viaje</button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              {Object.values(CATEGORIES).map(cat => (
-                <button key={cat.id} onClick={() => openCat(cat.id)} className={`${cat.bg} border-2 ${cat.border} min-h-[76px] p-4 rounded-2xl flex flex-col items-center justify-center ${cat.text} font-black active:scale-95 transition shadow-lg`}>
-                  <span className="text-3xl mb-1">{cat.emoji}</span>
-                  <span className="text-xs tracking-wide">{cat.name}</span>
-                </button>
-              ))}
-            </div>
-
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-2">Bitácora de Ruta ({expenses.length})</h2>
-            <div className="space-y-2">
-              {expenses.map(e => (
-                <div key={e.id} className="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex justify-between items-center">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-2xl">{CATEGORIES[e.category]?.emoji || '📌'}</span>
-                    <div>
-                      <div className="font-bold text-sm text-white leading-tight">{e.note}</div>
-                      <div className="text-[11px] text-slate-300 flex items-center gap-1.5 mt-0.5">
-                        <span>{e.time}</span>
-                        <span>•</span>
-                        <span className={e.fromDriver ? 'text-red-300 font-bold' : 'text-emerald-300'}>{e.fromDriver ? '👛 Mi Bolsillo' : 'Plata Viaje'}</span>
-                        <span>•</span>
-                        <span>{e.hasReceipt ? '📎 Con Factura' : 'Sin Recibo'}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right flex items-center gap-2">
-                    <div>
-                      <div className="font-black text-amber-400 text-sm">-${e.usdEq.toFixed(2)}</div>
-                      <div className="text-[11px] text-slate-300">{e.amount.toLocaleString()} {e.currency}</div>
-                    </div>
-                    <button onClick={() => { if(confirm('¿Borrar este gasto?')) setExpenses(expenses.filter(x => x.id !== e.id)); }} className="text-slate-400 hover:text-red-400 text-sm p-2">✕</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </main>
-
-          {draft.activeCat && (
-            <div className="fixed inset-0 bg-black/80 flex items-end justify-center p-3 z-50">
-              <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-black text-base text-amber-400 uppercase">{CATEGORIES[draft.activeCat].emoji} {CATEGORIES[draft.activeCat].name}</h3>
-                  <button onClick={() => setDraft({...draft, activeCat: null})} className="text-slate-300 text-lg font-bold p-1">✕</button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  {['USD', 'COP', 'VES'].map(m => (
-                    <button key={m} onClick={() => setDraft({...draft, expCurr: m, expAmt: ''})} className={`min-h-[48px] py-2 rounded-xl text-xs font-black border ${draft.expCurr === m ? 'bg-amber-400 text-[#030712] border-amber-300' : 'bg-slate-800 text-slate-200 border-slate-700'}`}>
-                      {m === 'USD' ? '💵 Dólares' : m === 'COP' ? '🇨🇴 Pesos' : '🇻🇪 Bolívares'}
-                    </button>
-                  ))}
-                </div>
-
-                <input type="number" placeholder="Monto..." value={draft.expAmt} onChange={e => setDraft({...draft, expAmt: e.target.value})} className="w-full bg-[#030712] border border-slate-700 text-3xl font-black text-center p-3 rounded-2xl mb-2 text-white" />
-                {draft.expAmt && <div className="text-center text-xs text-emerald-400 font-bold mb-2">Equivale a: ${toUSD(draft.expAmt, draft.expCurr).toFixed(2)} USD</div>}
-
-                <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
-                  {QUICK_BILLS[draft.expCurr].map(b => (
-                    <button key={b.l} onClick={() => setDraft({...draft, expAmt: String((Number(draft.expAmt) || 0) + b.v)})} className="flex-1 min-h-[44px] bg-slate-800 border border-slate-700 py-2 px-2 rounded-xl text-xs font-extrabold text-amber-300 active:scale-95">{b.l}</button>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {CATEGORIES[draft.activeCat].tags.map(t => (
-                    <button key={t} onClick={() => setDraft({...draft, expNote: t})} className={`text-xs px-3 py-1.5 rounded-full border ${draft.expNote === t ? 'bg-amber-400 text-[#030712] border-amber-300 font-black' : 'bg-slate-800 border-slate-700 text-slate-200'}`}>{t}</button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <button onClick={() => setDraft({...draft, expDriver: !draft.expDriver})} className={`min-h-[48px] py-2 px-2 rounded-xl text-xs font-bold border ${draft.expDriver ? 'bg-red-950 border-red-500 text-red-200' : 'bg-slate-800 border-slate-700 text-slate-200'}`}>
-                    {draft.expDriver ? '👛 De Mi Bolsillo' : '🚛 Plata del Viaje'}
-                  </button>
-                  <label className={`min-h-[48px] py-2 px-2 rounded-xl text-xs font-bold border flex items-center justify-center cursor-pointer ${draft.expReceipt ? 'bg-blue-950 border-blue-500 text-blue-200' : 'bg-slate-800 border-slate-700 text-slate-200'}`}>
-                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={() => setDraft({...draft, expReceipt: true})} />
-                    {draft.expReceipt ? '📎 Factura Adjunta' : '📷 Tomar Foto Recibo'}
-                  </label>
-                </div>
-
-                <button disabled={isSaving} onPointerDown={saveExpense} className="w-full min-h-[56px] bg-amber-400 text-[#030712] font-black py-3.5 rounded-2xl text-sm shadow-lg disabled:opacity-50">
-                  {isSaving ? 'GUARDANDO...' : 'GUARDAR GASTO'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {showVuelto && (
-            <div className="fixed inset-0 bg-black/80 flex items-end justify-center p-3 z-50">
-              <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-black text-base text-amber-400 uppercase">🔄 Calculadora de Sencillo / Vuelto</h3>
-                  <button onClick={() => setShowVuelto(false)} className="text-slate-300 font-bold p-1">✕</button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-slate-300 block">Billete entregado ($)</label>
-                    <input type="number" value={vBill} onChange={e => setVBill(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl font-black text-white" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-slate-300 block">Costo del gasto ($)</label>
-                    <input type="number" value={vCost} onChange={e => setVCost(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl font-black text-amber-400" />
-                  </div>
-                </div>
-                <div className="text-xs bg-[#030712] p-2.5 rounded-xl border border-slate-800 text-center">
-                  Vuelto total a recibir: <b className="text-emerald-400">${(vBill - vCost).toFixed(2)} USD</b>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-slate-200 font-bold block">¿Cómo te entregaron el vuelto?</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <span className="text-[11px] text-emerald-300 block">Billetes $</span>
-                      <input type="number" value={vRetUSD} onChange={e => setVRetUSD(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-yellow-300 block">Pesos COP</span>
-                      <input type="number" value={vRetCOP} onChange={e => setVRetCOP(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-sky-300 block">En Bs</span>
-                      <input type="number" value={vRetVES} onChange={e => setVRetVES(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
-                    </div>
-                  </div>
-                </div>
-                <button onClick={applyVuelto} className="w-full min-h-[56px] bg-emerald-400 text-[#030712] font-black py-3 rounded-2xl text-sm">APLICAR VUELTO Y ANOTAR GASTO</button>
-              </div>
-            </div>
-          )}
-
-          {showCuadre && (
-            <div className="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-50">
-              <div className="bg-white text-slate-900 rounded-3xl p-5 w-full max-w-sm shadow-2xl space-y-3">
-                <div className="flex justify-between items-center border-b border-dashed border-slate-300 pb-2">
-                  <div>
-                    <h3 className="font-black text-base uppercase">🧾 RECIBO DE LIQUIDACIÓN</h3>
-                    <p className="text-xs text-slate-600">{trip.route}</p>
-                  </div>
-                  <button onClick={() => setShowCuadre(false)} className="text-slate-500 font-bold text-lg p-1">✕</button>
-                </div>
-                <div className="text-xs space-y-1.5 border-b border-dashed border-slate-300 pb-3">
-                  <div className="flex justify-between"><span>Anticipo Total (Unificado):</span><b>${totals.antUSD.toFixed(2)} USD</b></div>
-                  <div className="flex justify-between text-red-700"><span>Total Gastado en Ruta:</span><b>-${totals.spentTotal.toFixed(2)} USD</b></div>
-                  <div className="flex justify-between text-emerald-800 font-bold pt-1"><span>Efectivo Sobrante del Viaje:</span><span>${totals.remainingTrip.toFixed(2)} USD</span></div>
-                </div>
-                <div className="text-xs space-y-1 border-b border-dashed border-slate-300 pb-3">
-                  <div className="font-bold text-slate-700 uppercase text-[10px]">Cruce de Cuentas del Chofer:</div>
-                  <div className="flex justify-between"><span>Pagado de Mi Bolsillo (Este viaje):</span><b>+${totals.driverPocket.toFixed(2)}</b></div>
-                  <div className="flex justify-between"><span>Deuda Acumulada ("Me deben"):</span><b>+${totals.oldDebts.toFixed(2)}</b></div>
-                </div>
-                <div className={`p-3 rounded-2xl text-center ${totals.netFinal >= 0 ? 'bg-emerald-100 text-emerald-950' : 'bg-amber-100 text-amber-950'}`}>
-                  <span className="text-[10px] font-bold uppercase block">Resultado Final del Cuadre</span>
-                  <span className="text-lg font-black">
-                    {totals.netFinal >= 0 ? `CHOFER ENTREGA: $${totals.netFinal.toFixed(2)} USD` : `PAGAR AL CHOFER: $${Math.abs(totals.netFinal).toFixed(2)} USD`}
-                  </span>
-                </div>
-                <button onClick={sendWhatsApp} className="w-full min-h-[56px] bg-emerald-700 text-white font-black py-3 rounded-2xl text-sm shadow-lg">📤 ENVIAR CUADRE POR WHATSAPP</button>
-              </div>
-            </div>
-          )}
-
-          {showSettings && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-              <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-black text-amber-400 uppercase text-sm">⚙️ Configurar Viaje y Privacidad</h3>
-                  <button onClick={() => setShowSettings(false)} className="p-1">✕</button>
-                </div>
-                <div>
-                  <label className="text-xs text-slate-300 block">Nombre de la Ruta</label>
-                  <input value={trip.route} onChange={e => setTrip({...trip, route: e.target.value})} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl text-sm font-bold" />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-yellow-300 block">Tasa COP por 1 USD</label>
-                    <input type="number" value={trip.rateCOP} onChange={e => setTrip({...trip, rateCOP: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl text-sm font-bold" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-sky-300 block">Tasa Bs por 1 USD</label>
-                    <input type="number" value={trip.rateVES} onChange={e => setTrip({...trip, rateVES: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl text-sm font-bold" />
-                  </div>
-                </div>
-                <div className="pt-2 border-t border-slate-800">
-                  <label className="text-xs font-bold text-emerald-300 block mb-2">Anticipo Recibido en Mano:</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <span className="text-[11px] text-slate-300 block">Dólares ($)</span>
-                      <input type="number" value={advance.USD} onChange={e => setAdvance({...advance, USD: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-slate-300 block">Pesos (COP)</span>
-                      <input type="number" value={advance.COP} onChange={e => setAdvance({...advance, COP: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-slate-300 block">Bolívares (Bs)</span>
-                      <input type="number" value={advance.VES} onChange={e => setAdvance({...advance, VES: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
-                    </div>
-                  </div>
-                </div>
-                <button onClick={() => setShowSettings(false)} className="w-full min-h-[52px] bg-amber-400 text-[#030712] font-black py-3 rounded-2xl text-sm">GUARDAR CAMBIOS</button>
-                <div className="pt-2 border-t border-slate-800">
-                  <button onClick={handleDeleteAllData} className="w-full py-2.5 rounded-xl border border-red-800 bg-red-950/50 text-red-300 text-xs font-bold">
-                    🗑️ Eliminar cuenta y borrar todos los datos locales
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showDebts && (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-              <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-black text-red-300 uppercase text-sm">📂 Archivo de Cuentas Pendientes</h3>
-                  <button onClick={() => setShowDebts(false)} className="p-1">✕</button>
-                </div>
-                <div className="space-y-2">
-                  {pendingDebts.map(d => (
-                    <div key={d.id} className="bg-[#030712] p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-                      <div>
-                        <div className={`text-xs font-bold ${d.settled ? 'line-through text-slate-500' : 'text-white'}`}>{d.title}</div>
-                        <div className="text-sm font-black text-red-400">${d.amountUSD.toFixed(2)} USD</div>
-                      </div>
-                      <button onClick={() => setPendingDebts(pendingDebts.map(x => x.id === d.id ? {...x, settled: !x.settled} : x))} className={`px-3 py-2 rounded-lg text-xs font-bold ${d.settled ? 'bg-slate-800 text-slate-300' : 'bg-emerald-600 text-white'}`}>
-                        {d.settled ? 'Pagado' : 'Marcar Pagado'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <button onClick={() => {
-                  const monto = prompt('Monto en USD que te quedaron debiendo:');
-                  if (monto) setPendingDebts([...pendingDebts, { id: Date.now().toString(), title: 'Saldo pendiente viaje', amountUSD: Number(monto), settled: false }]);
-                }} className="w-full min-h-[48px] bg-slate-800 border border-slate-700 text-amber-400 font-bold py-2.5 rounded-xl text-xs">+ Agregar Deuda Anterior</button>
-              </div>
-            </div>
-          )}
-
-          {showVoice && (
-            <div className="fixed inset-0 bg-black/80 flex items-end justify-center p-4 z-50">
-              <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm space-y-3 text-center">
-                <div className="text-4xl animate-pulse">🎙️</div>
-                <h3 className="font-black text-amber-400 text-sm uppercase">Dictado Rápido de Ruta</h3>
-                <p className="text-xs text-slate-300">Toca una frase rápida o dicta el gasto:</p>
-                <div className="space-y-2 text-left">
-                  {[
-                    { t: '📦 "Pagué $15 de caleta en descarga"', c: 'caleta', m: 'USD', a: 15, u: 15 },
-                    { t: '🍔 "Gasté 20 mil pesos en almuerzo y refresco"', c: 'comida', m: 'COP', a: 20000, u: Number((20000/trip.rateCOP).toFixed(2)) },
-                    { t: '🔧 "Puse $10 de mi bolsillo para cauchera"', c: 'mantenimiento', m: 'USD', a: 10, u: 10, d: true }
-                  ].map((p, i) => (
-                    <button key={i} onClick={() => {
-                      setExpenses([{ id: Date.now().toString(), category: p.c, note: p.t.replace(/"/g, ''), currency: p.m, amount: p.a, usdEq: p.u, fromDriver: !!p.d, hasReceipt: false, time: 'Voz' }, ...expenses]);
-                      setShowVoice(false);
-                    }} className="w-full bg-[#030712] border border-slate-800 p-3.5 rounded-xl text-xs font-bold text-slate-100 hover:border-amber-400">{p.t}</button>
-                  ))}
-                </div>
-                <button onClick={() => setShowVoice(false)} className="w-full py-2.5 text-xs text-slate-300 font-bold">Cancelar</button>
-              </div>
-            </div>
-          )}
-
-          {/* Barra Inferior Fija en Zona del Pulgar >= 56dp (Agentes 3, 5 y 8) */}
-          <nav className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-slate-900/95 backdrop-blur border-t border-slate-800 px-4 pt-2.5 safe-bottom flex justify-between items-center z-40">
-            <button onClick={() => setShowVuelto(true)} className="min-h-[56px] px-3 flex flex-col items-center justify-center text-xs font-bold text-slate-200 active:scale-95">
-              <span className="text-xl">🔄</span>
-              <span>Vuelto</span>
-            </button>
-            <button onClick={() => setShowVoice(true)} className="min-h-[56px] bg-amber-400 text-[#030712] px-6 py-3 rounded-full font-black text-sm shadow-lg shadow-amber-500/20 flex items-center gap-2 active:scale-95 transition">
-              <span>🎙️</span>
-              <span>NOTA VOZ</span>
-            </button>
-            <button onClick={() => setShowCuadre(true)} className="min-h-[56px] px-3 flex flex-col items-center justify-center text-xs font-bold text-emerald-300 active:scale-95">
-              <span className="text-xl">🧾</span>
-              <span>Cuadre</span>
-            </button>
-          </nav>
-        </div>
-      );
+      });
+      const antUSD = advance.USD + toUSD(advance.COP, 'COP') + toUSD(advance.VES, 'VES');
+      const spentTotal = expenses.reduce((s, e) => s + e.usdEq, 0);
+      const driverPocket = expenses.filter(e => e.fromDriver).reduce((s, e) => s + e.usdEq, 0);
+      const remTrip = antUSD - (spentTotal - driverPocket);
+      const oldDebts = debts.filter(d => !d.settled).reduce((s, d) => s + d.amountUSD, 0);
+      const owed = driverPocket + oldDebts;
+      const net = remTrip - owed;
+      return { gUSD, gCOP, gVES, antUSD, spentTotal, driverPocket, remTrip, oldDebts, owed, net };
     }
 
-    ReactDOM.render(<App />, document.getElementById('root'));
+    function render() {
+      save('rc_trip', trip); save('rc_advance', advance); save('rc_walletAdj', walletAdj); save('rc_debts', debts); save('rc_expenses', expenses);
+      const st = getStats();
+      document.getElementById('lbl-route').textContent = trip.route;
+      document.getElementById('lbl-rates').textContent = `Tasa: ${trip.rateCOP} COP | ${trip.rateVES} Bs (Ajustar)`;
+      document.getElementById('lbl-owed').textContent = `$${st.owed.toFixed(2)}`;
+      document.getElementById('lbl-rem').textContent = `$${st.remTrip.toFixed(2)}`;
+      document.getElementById('lbl-ant').textContent = `$${st.antUSD.toFixed(2)}`;
+      document.getElementById('lbl-spent').textContent = `-$${st.spentTotal.toFixed(2)}`;
+      document.getElementById('gav-usd').textContent = `$${st.gUSD.toFixed(0)}`;
+      document.getElementById('gav-cop').textContent = `${(st.gCOP/1000).toFixed(0)} mil`;
+      document.getElementById('gav-ves').textContent = `Bs ${st.gVES.toFixed(0)}`;
+      document.getElementById('lbl-exp-count').textContent = `Bitácora de Ruta (${expenses.length})`;
+
+      const list = document.getElementById('exp-list');
+      list.innerHTML = expenses.map(e => `
+        <div class="exp-item">
+          <div class="exp-left">
+            <span class="exp-emo">${CATS[e.category] ? CATS[e.category].emo : '📌'}</span>
+            <div>
+              <div class="exp-note">${e.note}</div>
+              <div class="exp-meta">${e.time} • <b style="color:${e.fromDriver ? '#f87171' : '#34d399'}">${e.fromDriver ? '👛 Mi Bolsillo' : 'Plata Viaje'}</b> • ${e.hasReceipt ? '📎 Con Factura' : 'Sin Recibo'}</div>
+            </div>
+          </div>
+          <div class="exp-right">
+            <div>
+              <div class="exp-usd">-$${e.usdEq.toFixed(2)}</div>
+              <div class="exp-orig">${Number(e.amount).toLocaleString()} ${e.currency}</div>
+            </div>
+            <button class="del-btn" onclick="delExpense('${e.id}')">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+    }
+
+    function openExpenseModal(cat) {
+      curCat = cat; curCurr = 'USD'; curNote = ''; curDriver = false; curReceipt = (cat === 'mantenimiento' || cat === 'peaje');
+      document.getElementById('exp-modal-title').textContent = `${CATS[cat].emo} ${CATS[cat].name}`;
+      document.getElementById('inp-exp-amt').value = '';
+      setExpCurr('USD');
+      renderTags();
+      updateSwitchesUI();
+      document.getElementById('modal-exp').classList.add('active');
+    }
+
+    function setExpCurr(c) {
+      curCurr = c;
+      ['USD','COP','VES'].forEach(k => document.getElementById('tab-'+k).classList.toggle('active', k === c));
+      document.getElementById('bills-row').innerHTML = BILLS[c].map(b => `<button class="bill-btn" onclick="addBill(${b.v})">${b.l}</button>`).join('');
+      updateEqHint();
+    }
+
+    function addBill(v) {
+      const inp = document.getElementById('inp-exp-amt');
+      inp.value = (Number(inp.value) || 0) + v;
+      updateEqHint();
+    }
+
+    function updateEqHint() {
+      const val = Number(document.getElementById('inp-exp-amt').value) || 0;
+      document.getElementById('lbl-eq-hint').textContent = val > 0 ? `Equivale a: $${toUSD(val, curCurr).toFixed(2)} USD` : '';
+    }
+
+    function renderTags() {
+      document.getElementById('tags-wrap').innerHTML = CATS[curCat].tags.map(t => `<button class="tag-btn ${curNote === t ? 'active' : ''}" onclick="selectTag('${t}')">${t}</button>`).join('');
+    }
+
+    function selectTag(t) { curNote = t; renderTags(); }
+    function toggleDriver() { curDriver = !curDriver; updateSwitchesUI(); }
+    function markReceiptAttached() { curReceipt = true; updateSwitchesUI(); }
+
+    function updateSwitchesUI() {
+      const bDrv = document.getElementById('btn-sw-driver');
+      bDrv.textContent = curDriver ? '👛 De Mi Bolsillo' : '🚛 Plata del Viaje';
+      bDrv.classList.toggle('driver-active', curDriver);
+      const bRec = document.getElementById('btn-sw-receipt');
+      document.getElementById('lbl-sw-receipt').textContent = curReceipt ? '📎 Factura Adjunta' : '📷 Tomar Foto Recibo';
+      bRec.classList.toggle('receipt-active', curReceipt);
+    }
+
+    function saveExpense() {
+      const val = parseFloat(document.getElementById('inp-exp-amt').value);
+      if (!val || val <= 0) return;
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      expenses.unshift({
+        id: Date.now().toString(),
+        category: curCat,
+        note: curNote || CATS[curCat].name,
+        currency: curCurr,
+        amount: val,
+        usdEq: Number(toUSD(val, curCurr).toFixed(2)),
+        fromDriver: curDriver,
+        hasReceipt: curReceipt,
+        time: now
+      });
+      closeModals();
+      render();
+    }
+
+    function delExpense(id) {
+      if (confirm('¿Borrar este gasto?')) { expenses = expenses.filter(e => e.id !== id); render(); }
+    }
+
+    function resetTrip() {
+      if (confirm('¿Iniciar nuevo viaje en limpio?')) { expenses = []; walletAdj = {USD:0,COP:0,VES:0}; render(); }
+    }
+
+    function openVuelto() { calcVueltoPreview(); document.getElementById('modal-vuelto').classList.add('active'); }
+    function calcVueltoPreview() {
+      const b = Number(document.getElementById('v-bill').value) || 0;
+      const c = Number(document.getElementById('v-cost').value) || 0;
+      document.getElementById('lbl-v-diff').textContent = `$${(b - c).toFixed(2)} USD`;
+    }
+    function applyVuelto() {
+      const b = Number(document.getElementById('v-bill').value) || 0;
+      const c = Number(document.getElementById('v-cost').value) || 0;
+      const rU = Number(document.getElementById('v-ret-usd').value) || 0;
+      const rC = Number(document.getElementById('v-ret-cop').value) || 0;
+      const rV = Number(document.getElementById('v-ret-ves').value) || 0;
+      walletAdj.USD += (-b + rU + c);
+      walletAdj.COP += rC;
+      walletAdj.VES += rV;
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      expenses.unshift({ id: Date.now().toString(), category: 'comida', note: `Pago con billete $${b} (Vuelto mixto)`, currency: 'USD', amount: c, usdEq: c, fromDriver: false, hasReceipt: false, time: now });
+      closeModals(); render();
+    }
+
+    function openCuadre() {
+      const st = getStats();
+      document.getElementById('t-route').textContent = trip.route;
+      document.getElementById('t-ant').textContent = `$${st.antUSD.toFixed(2)} USD`;
+      document.getElementById('t-spent').textContent = `-$${st.spentTotal.toFixed(2)} USD`;
+      document.getElementById('t-rem').textContent = `$${st.remTrip.toFixed(2)} USD`;
+      document.getElementById('t-pocket').textContent = `+$${st.driverPocket.toFixed(2)}`;
+      document.getElementById('t-debts').textContent = `+$${st.oldDebts.toFixed(2)}`;
+      document.getElementById('t-final').textContent = st.net >= 0 ? `CHOFER ENTREGA: $${st.net.toFixed(2)} USD` : `PAGAR AL CHOFER: $${Math.abs(st.net).toFixed(2)} USD`;
+      document.getElementById('modal-cuadre').classList.add('active');
+    }
+
+    function sendWhatsApp() {
+      const st = getStats();
+      const text = `🚛 *LIQUIDACIÓN DE VIAJE - RUTACUADRE PRO*\n📍 *Ruta:* ${trip.route}\n💱 *Tasas:* ${trip.rateCOP} COP/$ | ${trip.rateVES} Bs/$\n\n💵 *Anticipo Unificado:* $${st.antUSD.toFixed(2)} USD\n📉 *Total Gastado:* -$${st.spentTotal.toFixed(2)} USD\n💰 *Sobrante de Viaje:* $${st.remTrip.toFixed(2)} USD\n\n👛 *Puesto del Bolsillo del Chofer:* +$${st.driverPocket.toFixed(2)}\n📂 *Cuentas Pendientes Anteriores:* +$${st.oldDebts.toFixed(2)}\n\n⚖️ *BALANCE FINAL:* ${st.net >= 0 ? `El chofer entrega $${st.net.toFixed(2)} USD` : `FAVOR REEMBOLSAR AL CHOFER: $${Math.abs(st.net).toFixed(2)} USD`}`;
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
+
+    function openSettings() {
+      document.getElementById('set-route').value = trip.route;
+      document.getElementById('set-cop').value = trip.rateCOP;
+      document.getElementById('set-ves').value = trip.rateVES;
+      document.getElementById('set-adv-usd').value = advance.USD;
+      document.getElementById('set-adv-cop').value = advance.COP;
+      document.getElementById('set-adv-ves').value = advance.VES;
+      document.getElementById('modal-settings').classList.add('active');
+    }
+
+    function saveSettings() {
+      trip.route = document.getElementById('set-route').value || 'Ruta Activa';
+      trip.rateCOP = Number(document.getElementById('set-cop').value) || 4000;
+      trip.rateVES = Number(document.getElementById('set-ves').value) || 50;
+      advance.USD = Number(document.getElementById('set-adv-usd').value) || 0;
+      advance.COP = Number(document.getElementById('set-adv-cop').value) || 0;
+      advance.VES = Number(document.getElementById('set-adv-ves').value) || 0;
+      closeModals(); render();
+    }
+
+    function deleteAllData() {
+      if (confirm('¿Eliminar todos los datos locales y restaurar de fábrica?')) { localStorage.clear(); location.reload(); }
+    }
+
+    function openDebts() {
+      renderDebtsList();
+      document.getElementById('modal-debts').classList.add('active');
+    }
+
+    function renderDebtsList() {
+      document.getElementById('debts-list').innerHTML = debts.map(d => `
+        <div style="background:#030712;padding:12px;border-radius:12px;border:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:12px;font-weight:800;${d.settled ? 'text-decoration:line-through;color:#64748b;' : 'color:#fff;'}">${d.title}</div>
+            <div style="font-size:14px;font-weight:900;color:#f87171;">$${d.amountUSD.toFixed(2)} USD</div>
+          </div>
+          <button onclick="toggleDebt('${d.id}')" style="padding:8px 12px;border-radius:10px;border:none;font-size:11px;font-weight:900;background:${d.settled ? '#1e293b' : '#059669'};color:#fff;">
+            ${d.settled ? 'Pagado' : 'Marcar Pagado'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function toggleDebt(id) {
+      debts = debts.map(d => d.id === id ? {...d, settled: !d.settled} : d);
+      renderDebtsList(); render();
+    }
+
+    function addDebtPrompt() {
+      const m = prompt('Monto en USD que te quedaron debiendo:');
+      if (m && Number(m) > 0) {
+        debts.push({ id: Date.now().toString(), title: 'Saldo pendiente viaje', amountUSD: Number(m), settled: false });
+        renderDebtsList(); render();
+      }
+    }
+
+    function openVoice() { document.getElementById('modal-voice').classList.add('active'); }
+    function quickVoice(cat, curr, amt, note, drv) {
+      expenses.unshift({ id: Date.now().toString(), category: cat, note: note, currency: curr, amount: amt, usdEq: Number(toUSD(amt, curr).toFixed(2)), fromDriver: drv, hasReceipt: false, time: 'Voz' });
+      closeModals(); render();
+    }
+
+    render();
   </script>
 </body>
 </html>
