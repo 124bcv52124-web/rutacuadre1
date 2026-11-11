@@ -5,14 +5,30 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#030712",
-  "theme_color": "#f59e0b",
-  "orientation": "portrait",
+  "theme_color": "#030712",
+  "orientation": "any",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2554/2554978.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar Viático",
+      "short_name": "Nuevo Gasto",
+      "description": "Anotar gasto rápido de ruta",
+      "url": "/?action=gasto",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/2554/2554978.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Liquidar Viaje",
+      "short_name": "Cerrar Cuadre",
+      "description": "Generar recibo de liquidación",
+      "url": "/?action=cuadre",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/2554/2554978.png", "sizes": "512x512" }]
     }
   ]
 }
