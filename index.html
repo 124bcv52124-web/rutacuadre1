@@ -626,6 +626,12 @@
     }
 
     render();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(() => {
+        console.log('Modo Offline activado');
+      }).catch(() => {});
+    }
   </script>
 </body>
 </html>
