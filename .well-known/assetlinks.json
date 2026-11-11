@@ -1,0 +1,16 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.rutacuadre.twa",
+      "sha256_cert_fingerprints": [
+        "47:3F:CE:73:D0:6A:DD:C7:3A:58:E4:82:F0:09:BA:30:EF:9D:71:FA:24:E5:6D:67:57:AB:FA:18:25:C1:B2:07",
+        "47:3F:CE:73:D0:6A:DD:C7:3A:58:E4:82:F0:09:BA:30:EF:9D:71:FA:24:E5:6D:67:57:AB:FA:18:25:C1:B2:D7"
+      ]
+    }
+  }
+]
