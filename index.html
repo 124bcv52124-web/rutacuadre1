@@ -2,29 +2,54 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>RutaCuadre Pro</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#030712" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    body { background-color: #020617; color: #f8fafc; -webkit-tap-highlight-color: transparent; user-select: none; }
+    body {
+      background-color: #030712;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .safe-bottom {
+      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    }
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <!-- App Shell Skeleton para arranque en frío (Agente 2) -->
+    <div style="max-width:448px;margin:0 auto;padding:20px;color:#94a3b8;font-family:sans-serif;text-align:center;margin-top:40px;">
+      <div style="font-size:42px;margin-bottom:12px;">🚛</div>
+      <div style="font-weight:900;color:#fbbf24;font-size:18px;">RUTACUADRE PRO</div>
+      <div style="font-size:12px;margin-top:6px;">Cargando bitácora de viaje offline...</div>
+    </div>
+  </div>
+
+  <script>
+    // Registro de Service Worker para modo Offline en carretera (Agente 11)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
     const CATEGORIES = {
-      comida: { id: 'comida', name: 'Comida / Refresco', emoji: '🍔', border: 'border-amber-500/50', bg: 'bg-amber-500/15', text: 'text-amber-300', tags: ['Almuerzo', 'Refresco / Agua', 'Desayuno', 'Cena', 'Café y Pan'] },
-      caleta: { id: 'caleta', name: 'Caleta / Obreros', emoji: '📦', border: 'border-blue-500/50', bg: 'bg-blue-500/15', text: 'text-blue-300', tags: ['Descarga camión', 'Carga mercado', 'Trasbordo', 'Ayudante extra'] },
-      mantenimiento: { id: 'mantenimiento', name: 'Mantenimiento', emoji: '🔧', border: 'border-orange-500/50', bg: 'bg-orange-500/15', text: 'text-orange-300', tags: ['Cauchera / Parche', 'Aceite / Liga', 'Repuesto ruta', 'Lavado'] },
-      peaje: { id: 'peaje', name: 'Peaje / Gasoil', emoji: '⛽', border: 'border-emerald-500/50', bg: 'bg-emerald-500/15', text: 'text-emerald-300', tags: ['Peaje autopista', 'Surtido Gasoil', 'Alcabala / Control', 'Estacionamiento'] }
+      comida: { id: 'comida', name: 'Comida / Refresco', emoji: '🍔', border: 'border-amber-500/60', bg: 'bg-amber-500/15', text: 'text-amber-300', tags: ['Almuerzo', 'Refresco / Agua', 'Desayuno', 'Cena', 'Café y Pan'] },
+      caleta: { id: 'caleta', name: 'Caleta / Obreros', emoji: '📦', border: 'border-blue-500/60', bg: 'bg-blue-500/15', text: 'text-blue-300', tags: ['Descarga camión', 'Carga mercado', 'Trasbordo', 'Ayudante extra'] },
+      mantenimiento: { id: 'mantenimiento', name: 'Mantenimiento', emoji: '🔧', border: 'border-orange-500/60', bg: 'bg-orange-500/15', text: 'text-orange-300', tags: ['Cauchera / Parche', 'Aceite / Liga', 'Repuesto ruta', 'Lavado'] },
+      peaje: { id: 'peaje', name: 'Peaje / Gasoil', emoji: '⛽', border: 'border-emerald-500/60', bg: 'bg-emerald-500/15', text: 'text-emerald-300', tags: ['Peaje autopista', 'Surtido Gasoil', 'Alcabala / Control', 'Estacionamiento'] }
     };
 
     const QUICK_BILLS = {
@@ -34,7 +59,6 @@
     };
 
     function App() {
-      // Persistencia en el teléfono (LocalStorage)
       const loadState = (key, fallback) => {
         try { const saved = localStorage.getItem(key); return saved ? JSON.parse(saved) : fallback; } catch { return fallback; }
       };
@@ -48,35 +72,29 @@
         { id: '2', category: 'comida', note: 'Desayuno y refrescos', currency: 'COP', amount: 24000, usdEq: 6.0, fromDriver: false, hasReceipt: false, time: '09:15 AM' }
       ]));
 
-      useEffect(() => { localStorage.setItem('rc_trip', JSON.stringify(trip)); }, [trip]);
-      useEffect(() => { localStorage.setItem('rc_advance', JSON.stringify(advance)); }, [advance]);
-      useEffect(() => { localStorage.setItem('rc_walletAdj', JSON.stringify(walletAdj)); }, [walletAdj]);
-      useEffect(() => { localStorage.setItem('rc_debts', JSON.stringify(pendingDebts)); }, [pendingDebts]);
-      useEffect(() => { localStorage.setItem('rc_expenses', JSON.stringify(expenses)); }, [expenses]);
+      // Persistencia contra Process Death al abrir cámara (Agente 12)
+      const [draft, setDraft] = useState(() => loadState('rc_draft', { activeCat: null, expCurr: 'USD', expAmt: '', expNote: '', expDriver: false, expReceipt: false }));
+      const [isSaving, setIsSaving] = useState(false); // Bloqueo Rapid Tap (Agente 4)
 
-      // Modales
-      const [activeCat, setActiveCat] = useState(null);
       const [showVuelto, setShowVuelto] = useState(false);
       const [showCuadre, setShowCuadre] = useState(false);
       const [showSettings, setShowSettings] = useState(false);
       const [showDebts, setShowDebts] = useState(false);
       const [showVoice, setShowVoice] = useState(false);
 
-      // Form Gasto
-      const [expCurr, setExpCurr] = useState('USD');
-      const [expAmt, setExpAmt] = useState('');
-      const [expNote, setExpNote] = useState('');
-      const [expDriver, setExpDriver] = useState(false);
-      const [expReceipt, setExpReceipt] = useState(false);
-
-      // Form Vuelto
       const [vBill, setVBill] = useState(20);
       const [vCost, setVCost] = useState(6);
       const [vRetUSD, setVRetUSD] = useState(10);
       const [vRetCOP, setVRetCOP] = useState(16000);
       const [vRetVES, setVRetVES] = useState(0);
 
-      // Cálculos
+      useEffect(() => { localStorage.setItem('rc_trip', JSON.stringify(trip)); }, [trip]);
+      useEffect(() => { localStorage.setItem('rc_advance', JSON.stringify(advance)); }, [advance]);
+      useEffect(() => { localStorage.setItem('rc_walletAdj', JSON.stringify(walletAdj)); }, [walletAdj]);
+      useEffect(() => { localStorage.setItem('rc_debts', JSON.stringify(pendingDebts)); }, [pendingDebts]);
+      useEffect(() => { localStorage.setItem('rc_expenses', JSON.stringify(expenses)); }, [expenses]);
+      useEffect(() => { localStorage.setItem('rc_draft', JSON.stringify(draft)); }, [draft]);
+
       const toUSD = (amt, curr) => {
         const n = Number(amt) || 0;
         if (curr === 'USD') return n;
@@ -112,31 +130,30 @@
       }, [advance, expenses, pendingDebts, trip]);
 
       const openCat = (id) => {
-        setActiveCat(id);
-        setExpCurr('USD');
-        setExpAmt('');
-        setExpNote('');
-        setExpDriver(false);
-        setExpReceipt(id === 'mantenimiento' || id === 'peaje');
+        setDraft({ activeCat: id, expCurr: 'USD', expAmt: '', expNote: '', expDriver: false, expReceipt: id === 'mantenimiento' || id === 'peaje' });
       };
 
+      // Guardado idempotente contra toques repetidos (Agente 4)
       const saveExpense = () => {
-        const val = parseFloat(expAmt);
+        if (isSaving) return;
+        const val = parseFloat(draft.expAmt);
         if (!val || val <= 0) return;
-        const eq = Number(toUSD(val, expCurr).toFixed(2));
+        setIsSaving(true);
+        const eq = Number(toUSD(val, draft.expCurr).toFixed(2));
         const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setExpenses([{
+        setExpenses(prev => [{
           id: Date.now().toString(),
-          category: activeCat,
-          note: expNote.trim() || CATEGORIES[activeCat].name,
-          currency: expCurr,
+          category: draft.activeCat,
+          note: draft.expNote.trim() || CATEGORIES[draft.activeCat].name,
+          currency: draft.expCurr,
           amount: val,
           usdEq: eq,
-          fromDriver: expDriver,
-          hasReceipt: expReceipt,
+          fromDriver: draft.expDriver,
+          hasReceipt: draft.expReceipt,
           time: now
-        }, ...expenses]);
-        setActiveCat(null);
+        }, ...prev]);
+        setDraft({ activeCat: null, expCurr: 'USD', expAmt: '', expNote: '', expDriver: false, expReceipt: false });
+        setTimeout(() => setIsSaving(false), 350);
       };
 
       const applyVuelto = () => {
@@ -161,77 +178,80 @@
         setShowVuelto(false);
       };
 
+      // Cumplimiento Google Play Data Safety: Borrado total de cuenta y datos (Agente 17)
+      const handleDeleteAllData = () => {
+        if (confirm('¿Estás seguro de eliminar todos los datos guardados y restablecer la aplicación de fábrica? Esta acción no se puede deshacer.')) {
+          localStorage.clear();
+          window.location.reload();
+        }
+      };
+
       const sendWhatsApp = () => {
         const text = `🚛 *LIQUIDACIÓN DE VIAJE - RUTACUADRE PRO*\n📍 *Ruta:* ${trip.route}\n💱 *Tasas:* ${trip.rateCOP} COP/$ | ${trip.rateVES} Bs/$\n\n💵 *Anticipo Unificado:* $${totals.antUSD.toFixed(2)} USD\n📉 *Total Gastado:* -$${totals.spentTotal.toFixed(2)} USD\n💰 *Sobrante de Viaje:* $${totals.remainingTrip.toFixed(2)} USD\n\n👛 *Puesto del Bolsillo del Chofer:* +$${totals.driverPocket.toFixed(2)}\n📂 *Cuentas Pendientes Anteriores:* +$${totals.oldDebts.toFixed(2)}\n\n⚖️ *BALANCE FINAL:* ${totals.netFinal >= 0 ? `El chofer entrega $${totals.netFinal.toFixed(2)} USD` : `FAVOR REEMBOLSAR AL CHOFER: $${Math.abs(totals.netFinal).toFixed(2)} USD`}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
       };
 
       return (
-        <div className="max-w-md mx-auto min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans pb-28">
-          {/* Top Bar */}
+        <div className="max-w-xl mx-auto min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans pb-28">
           <header className="p-4 bg-slate-900 border-b border-slate-800 rounded-b-3xl shadow-xl">
             <div className="flex justify-between items-center mb-3">
-              <div onClick={() => setShowSettings(true)} className="cursor-pointer">
+              <button onClick={() => setShowSettings(true)} className="text-left">
                 <div className="flex items-center gap-1.5">
                   <span className="text-lg">🚛</span>
                   <h1 className="text-base font-black tracking-wide text-amber-400 uppercase">{trip.route}</h1>
-                  <span className="text-xs text-slate-400">⚙️</span>
+                  <span className="text-xs text-slate-300">⚙️</span>
                 </div>
-                <p className="text-[11px] text-slate-400">Tasa: {trip.rateCOP} COP | {trip.rateVES} Bs (Toca para editar)</p>
-              </div>
-              <button onClick={() => setShowDebts(true)} className="bg-red-950/90 border border-red-700/80 px-3 py-1.5 rounded-2xl text-right active:scale-95 transition">
-                <span className="block text-[9px] font-bold uppercase tracking-wider text-red-300">Me deben</span>
-                <span className="text-sm font-black text-red-400">${totals.totalOwedToDriver.toFixed(2)}</span>
+                <p className="text-xs text-slate-300">Tasa: {trip.rateCOP} COP | {trip.rateVES} Bs (Ajustar)</p>
+              </button>
+              <button onClick={() => setShowDebts(true)} className="bg-red-950 border border-red-700 px-3.5 py-2 rounded-2xl text-right active:scale-95 transition">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-red-200">Me deben</span>
+                <span className="text-sm font-black text-red-300">${totals.totalOwedToDriver.toFixed(2)}</span>
               </button>
             </div>
 
-            {/* Saldo Maestro */}
-            <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/90 flex justify-between items-center mb-3">
+            <div className="bg-[#030712] p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center mb-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Fondo Disponible (Unificado)</span>
-                <div className="text-3xl font-black text-emerald-400">${totals.remainingTrip.toFixed(2)} <span className="text-xs text-slate-400">USD</span></div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300 block">Fondo Disponible (Unificado)</span>
+                <div className="text-3xl font-black text-emerald-400">${totals.remainingTrip.toFixed(2)} <span className="text-xs text-slate-300">USD</span></div>
               </div>
-              <div className="text-right text-[11px] text-slate-400 space-y-0.5">
-                <div>Anticipo: <b className="text-slate-200">${totals.antUSD.toFixed(2)}</b></div>
+              <div className="text-right text-xs text-slate-300 space-y-0.5">
+                <div>Anticipo: <b className="text-white">${totals.antUSD.toFixed(2)}</b></div>
                 <div>Gastado: <b className="text-amber-400">-${totals.spentTotal.toFixed(2)}</b></div>
               </div>
             </div>
 
-            {/* 3 Gavetas Reales */}
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="bg-slate-800/70 p-2 rounded-xl border border-slate-700/70">
-                <span className="text-[10px] text-emerald-400 font-bold block">💵 Efectivo USD</span>
+              <div className="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
+                <span className="text-[11px] text-emerald-300 font-bold block">💵 Efectivo USD</span>
                 <span className="font-black text-sm text-white">${gavetas.USD.toFixed(0)}</span>
               </div>
-              <div className="bg-slate-800/70 p-2 rounded-xl border border-slate-700/70">
-                <span className="text-[10px] text-yellow-400 font-bold block">🇨🇴 Pesos COP</span>
+              <div className="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
+                <span className="text-[11px] text-yellow-300 font-bold block">🇨🇴 Pesos COP</span>
                 <span className="font-black text-sm text-white">{(gavetas.COP / 1000).toFixed(0)} mil</span>
               </div>
-              <div className="bg-slate-800/70 p-2 rounded-xl border border-slate-700/70">
-                <span className="text-[10px] text-sky-400 font-bold block">🇻🇪 Bolívares</span>
+              <div className="bg-slate-800/90 p-2 rounded-xl border border-slate-700">
+                <span className="text-[11px] text-sky-300 font-bold block">🇻🇪 Bolívares</span>
                 <span className="font-black text-sm text-white">Bs {gavetas.VES.toFixed(0)}</span>
               </div>
             </div>
           </header>
 
-          {/* Cuerpo Principal */}
           <main className="p-4 flex-1">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Registrar Gasto (1 Toque)</h2>
-              <button onClick={() => { if(confirm('¿Iniciar nuevo viaje en limpio?')) setExpenses([]); }} className="text-[11px] text-amber-400 font-bold">🔄 Nuevo Viaje</button>
+              <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-300">Registrar Gasto (Botones >= 56dp)</h2>
+              <button onClick={() => { if(confirm('¿Deseas iniciar un nuevo viaje en limpio?')) setExpenses([]); }} className="text-xs text-amber-400 font-bold py-1 px-2">🔄 Nuevo Viaje</button>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-5">
               {Object.values(CATEGORIES).map(cat => (
-                <button key={cat.id} onClick={() => openCat(cat.id)} className={`${cat.bg} border-2 ${cat.border} p-4 rounded-2xl flex flex-col items-center justify-center ${cat.text} font-black active:scale-95 transition shadow-lg`}>
+                <button key={cat.id} onClick={() => openCat(cat.id)} className={`${cat.bg} border-2 ${cat.border} min-h-[76px] p-4 rounded-2xl flex flex-col items-center justify-center ${cat.text} font-black active:scale-95 transition shadow-lg`}>
                   <span className="text-3xl mb-1">{cat.emoji}</span>
                   <span className="text-xs tracking-wide">{cat.name}</span>
                 </button>
               ))}
             </div>
 
-            {/* Historial */}
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">Bitácora de Ruta ({expenses.length})</h2>
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 mb-2">Bitácora de Ruta ({expenses.length})</h2>
             <div className="space-y-2">
               {expenses.map(e => (
                 <div key={e.id} className="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex justify-between items-center">
@@ -239,10 +259,10 @@
                     <span className="text-2xl">{CATEGORIES[e.category]?.emoji || '📌'}</span>
                     <div>
                       <div className="font-bold text-sm text-white leading-tight">{e.note}</div>
-                      <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                      <div className="text-[11px] text-slate-300 flex items-center gap-1.5 mt-0.5">
                         <span>{e.time}</span>
                         <span>•</span>
-                        <span className={e.fromDriver ? 'text-red-400 font-bold' : 'text-emerald-400'}>{e.fromDriver ? '👛 Mi Bolsillo' : 'Plata Viaje'}</span>
+                        <span className={e.fromDriver ? 'text-red-300 font-bold' : 'text-emerald-300'}>{e.fromDriver ? '👛 Mi Bolsillo' : 'Plata Viaje'}</span>
                         <span>•</span>
                         <span>{e.hasReceipt ? '📎 Con Factura' : 'Sin Recibo'}</span>
                       </div>
@@ -251,200 +271,199 @@
                   <div className="text-right flex items-center gap-2">
                     <div>
                       <div className="font-black text-amber-400 text-sm">-${e.usdEq.toFixed(2)}</div>
-                      <div className="text-[10px] text-slate-400">{e.amount.toLocaleString()} {e.currency}</div>
+                      <div className="text-[11px] text-slate-300">{e.amount.toLocaleString()} {e.currency}</div>
                     </div>
-                    <button onClick={() => setExpenses(expenses.filter(x => x.id !== e.id))} className="text-slate-600 hover:text-red-400 text-xs px-1">✕</button>
+                    <button onClick={() => { if(confirm('¿Borrar este gasto?')) setExpenses(expenses.filter(x => x.id !== e.id)); }} className="text-slate-400 hover:text-red-400 text-sm p-2">✕</button>
                   </div>
                 </div>
               ))}
             </div>
           </main>
 
-          {/* Modal Gasto */}
-          {activeCat && (
+          {draft.activeCat && (
             <div className="fixed inset-0 bg-black/80 flex items-end justify-center p-3 z-50">
               <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-black text-base text-amber-400 uppercase">{CATEGORIES[activeCat].emoji} {CATEGORIES[activeCat].name}</h3>
-                  <button onClick={() => setActiveCat(null)} className="text-slate-400 text-lg font-bold">✕</button>
+                  <h3 className="font-black text-base text-amber-400 uppercase">{CATEGORIES[draft.activeCat].emoji} {CATEGORIES[draft.activeCat].name}</h3>
+                  <button onClick={() => setDraft({...draft, activeCat: null})} className="text-slate-300 text-lg font-bold p-1">✕</button>
                 </div>
 
-                {/* Selector Moneda */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {['USD', 'COP', 'VES'].map(m => (
-                    <button key={m} onClick={() => { setExpCurr(m); setExpAmt(''); }} className={`py-2 rounded-xl text-xs font-black border ${expCurr === m ? 'bg-amber-500 text-black border-amber-400' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                    <button key={m} onClick={() => setDraft({...draft, expCurr: m, expAmt: ''})} className={`min-h-[48px] py-2 rounded-xl text-xs font-black border ${draft.expCurr === m ? 'bg-amber-400 text-[#030712] border-amber-300' : 'bg-slate-800 text-slate-200 border-slate-700'}`}>
                       {m === 'USD' ? '💵 Dólares' : m === 'COP' ? '🇨🇴 Pesos' : '🇻🇪 Bolívares'}
                     </button>
                   ))}
                 </div>
 
-                <input type="number" placeholder="Monto..." value={expAmt} onChange={e => setExpAmt(e.target.value)} className="w-full bg-slate-950 border border-slate-700 text-3xl font-black text-center p-2.5 rounded-2xl mb-2 text-white" />
-                {expAmt && <div className="text-center text-xs text-emerald-400 font-bold mb-2">Equivale a: ${toUSD(expAmt, expCurr).toFixed(2)} USD</div>}
+                <input type="number" placeholder="Monto..." value={draft.expAmt} onChange={e => setDraft({...draft, expAmt: e.target.value})} className="w-full bg-[#030712] border border-slate-700 text-3xl font-black text-center p-3 rounded-2xl mb-2 text-white" />
+                {draft.expAmt && <div className="text-center text-xs text-emerald-400 font-bold mb-2">Equivale a: ${toUSD(draft.expAmt, draft.expCurr).toFixed(2)} USD</div>}
 
-                {/* Botones Billetes */}
                 <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
-                  {QUICK_BILLS[expCurr].map(b => (
-                    <button key={b.l} onClick={() => setExpAmt(String((Number(expAmt) || 0) + b.v))} className="flex-1 bg-slate-800 border border-slate-700 py-1.5 px-2 rounded-xl text-xs font-extrabold text-amber-300 active:scale-95">{b.l}</button>
+                  {QUICK_BILLS[draft.expCurr].map(b => (
+                    <button key={b.l} onClick={() => setDraft({...draft, expAmt: String((Number(draft.expAmt) || 0) + b.v)})} className="flex-1 min-h-[44px] bg-slate-800 border border-slate-700 py-2 px-2 rounded-xl text-xs font-extrabold text-amber-300 active:scale-95">{b.l}</button>
                   ))}
                 </div>
 
-                {/* Etiquetas Rápidas */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                  {CATEGORIES[activeCat].tags.map(t => (
-                    <button key={t} onClick={() => setExpNote(t)} className={`text-[11px] px-2.5 py-1 rounded-full border ${expNote === t ? 'bg-amber-500/20 border-amber-400 text-amber-300 font-bold' : 'bg-slate-800 border-slate-700 text-slate-300'}`}>{t}</button>
+                  {CATEGORIES[draft.activeCat].tags.map(t => (
+                    <button key={t} onClick={() => setDraft({...draft, expNote: t})} className={`text-xs px-3 py-1.5 rounded-full border ${draft.expNote === t ? 'bg-amber-400 text-[#030712] border-amber-300 font-black' : 'bg-slate-800 border-slate-700 text-slate-200'}`}>{t}</button>
                   ))}
                 </div>
 
-                {/* Switches */}
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  <button onClick={() => setExpDriver(!expDriver)} className={`py-2 px-2 rounded-xl text-xs font-bold border ${expDriver ? 'bg-red-950 border-red-500 text-red-300' : 'bg-slate-800 border-slate-700 text-slate-300'}`}>
-                    {expDriver ? '👛 De Mi Bolsillo' : '🚛 Plata del Viaje'}
+                  <button onClick={() => setDraft({...draft, expDriver: !draft.expDriver})} className={`min-h-[48px] py-2 px-2 rounded-xl text-xs font-bold border ${draft.expDriver ? 'bg-red-950 border-red-500 text-red-200' : 'bg-slate-800 border-slate-700 text-slate-200'}`}>
+                    {draft.expDriver ? '👛 De Mi Bolsillo' : '🚛 Plata del Viaje'}
                   </button>
-                  <button onClick={() => setExpReceipt(!expReceipt)} className={`py-2 px-2 rounded-xl text-xs font-bold border ${expReceipt ? 'bg-blue-950 border-blue-500 text-blue-300' : 'bg-slate-800 border-slate-700 text-slate-300'}`}>
-                    {expReceipt ? '📎 Con Factura/Foto' : '📄 Sin Recibo'}
-                  </button>
+                  <label className={`min-h-[48px] py-2 px-2 rounded-xl text-xs font-bold border flex items-center justify-center cursor-pointer ${draft.expReceipt ? 'bg-blue-950 border-blue-500 text-blue-200' : 'bg-slate-800 border-slate-700 text-slate-200'}`}>
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={() => setDraft({...draft, expReceipt: true})} />
+                    {draft.expReceipt ? '📎 Factura Adjunta' : '📷 Tomar Foto Recibo'}
+                  </label>
                 </div>
 
-                <button onClick={saveExpense} className="w-full bg-amber-500 text-black font-black py-3.5 rounded-2xl text-sm shadow-lg">GUARDAR GASTO</button>
+                <button disabled={isSaving} onPointerDown={saveExpense} className="w-full min-h-[56px] bg-amber-400 text-[#030712] font-black py-3.5 rounded-2xl text-sm shadow-lg disabled:opacity-50">
+                  {isSaving ? 'GUARDANDO...' : 'GUARDAR GASTO'}
+                </button>
               </div>
             </div>
           )}
 
-          {/* Modal Vuelto Cruzado */}
           {showVuelto && (
             <div className="fixed inset-0 bg-black/80 flex items-end justify-center p-3 z-50">
               <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm space-y-3">
                 <div className="flex justify-between items-center">
                   <h3 className="font-black text-base text-amber-400 uppercase">🔄 Calculadora de Sencillo / Vuelto</h3>
-                  <button onClick={() => setShowVuelto(false)} className="text-slate-400 font-bold">✕</button>
+                  <button onClick={() => setShowVuelto(false)} className="text-slate-300 font-bold p-1">✕</button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[11px] text-slate-400 block">Billete entregado ($ USD)</label>
-                    <input type="number" value={vBill} onChange={e => setVBill(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl font-black text-white" />
+                    <label className="text-xs text-slate-300 block">Billete entregado ($)</label>
+                    <input type="number" value={vBill} onChange={e => setVBill(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl font-black text-white" />
                   </div>
                   <div>
-                    <label className="text-[11px] text-slate-400 block">Costo del gasto ($ USD)</label>
-                    <input type="number" value={vCost} onChange={e => setVCost(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl font-black text-amber-400" />
+                    <label className="text-xs text-slate-300 block">Costo del gasto ($)</label>
+                    <input type="number" value={vCost} onChange={e => setVCost(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl font-black text-amber-400" />
                   </div>
                 </div>
-                <div className="text-xs bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center">
+                <div className="text-xs bg-[#030712] p-2.5 rounded-xl border border-slate-800 text-center">
                   Vuelto total a recibir: <b className="text-emerald-400">${(vBill - vCost).toFixed(2)} USD</b>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] text-slate-300 font-bold block">¿Cómo te entregaron el vuelto?</label>
+                  <label className="text-xs text-slate-200 font-bold block">¿Cómo te entregaron el vuelto?</label>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <span className="text-[10px] text-emerald-400 block">En Billetes $</span>
-                      <input type="number" value={vRetUSD} onChange={e => setVRetUSD(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                      <span className="text-[11px] text-emerald-300 block">Billetes $</span>
+                      <input type="number" value={vRetUSD} onChange={e => setVRetUSD(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
                     </div>
                     <div>
-                      <span className="text-[10px] text-yellow-400 block">En Pesos COP</span>
-                      <input type="number" value={vRetCOP} onChange={e => setVRetCOP(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                      <span className="text-[11px] text-yellow-300 block">Pesos COP</span>
+                      <input type="number" value={vRetCOP} onChange={e => setVRetCOP(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
                     </div>
                     <div>
-                      <span className="text-[10px] text-sky-400 block">En Bs</span>
-                      <input type="number" value={vRetVES} onChange={e => setVRetVES(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                      <span className="text-[11px] text-sky-300 block">En Bs</span>
+                      <input type="number" value={vRetVES} onChange={e => setVRetVES(e.target.value)} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
                     </div>
                   </div>
                 </div>
-                <button onClick={applyVuelto} className="w-full bg-emerald-500 text-black font-black py-3 rounded-2xl text-sm">APLICAR VUELTO Y ANOTAR GASTO</button>
+                <button onClick={applyVuelto} className="w-full min-h-[56px] bg-emerald-400 text-[#030712] font-black py-3 rounded-2xl text-sm">APLICAR VUELTO Y ANOTAR GASTO</button>
               </div>
             </div>
           )}
 
-          {/* Modal Hoja de Cuadre */}
           {showCuadre && (
             <div className="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-50">
               <div className="bg-white text-slate-900 rounded-3xl p-5 w-full max-w-sm shadow-2xl space-y-3">
                 <div className="flex justify-between items-center border-b border-dashed border-slate-300 pb-2">
                   <div>
                     <h3 className="font-black text-base uppercase">🧾 RECIBO DE LIQUIDACIÓN</h3>
-                    <p className="text-xs text-slate-500">{trip.route}</p>
+                    <p className="text-xs text-slate-600">{trip.route}</p>
                   </div>
-                  <button onClick={() => setShowCuadre(false)} className="text-slate-400 font-bold text-lg">✕</button>
+                  <button onClick={() => setShowCuadre(false)} className="text-slate-500 font-bold text-lg p-1">✕</button>
                 </div>
                 <div className="text-xs space-y-1.5 border-b border-dashed border-slate-300 pb-3">
                   <div className="flex justify-between"><span>Anticipo Total (Unificado):</span><b>${totals.antUSD.toFixed(2)} USD</b></div>
-                  <div className="flex justify-between text-red-600"><span>Total Gastado en Ruta:</span><b>-${totals.spentTotal.toFixed(2)} USD</b></div>
-                  <div className="flex justify-between text-emerald-700 font-bold pt-1"><span>Efectivo Sobrante del Viaje:</span><span>${totals.remainingTrip.toFixed(2)} USD</span></div>
+                  <div className="flex justify-between text-red-700"><span>Total Gastado en Ruta:</span><b>-${totals.spentTotal.toFixed(2)} USD</b></div>
+                  <div className="flex justify-between text-emerald-800 font-bold pt-1"><span>Efectivo Sobrante del Viaje:</span><span>${totals.remainingTrip.toFixed(2)} USD</span></div>
                 </div>
                 <div className="text-xs space-y-1 border-b border-dashed border-slate-300 pb-3">
-                  <div className="font-bold text-slate-600 uppercase text-[10px]">Cruce de Cuentas del Chofer:</div>
+                  <div className="font-bold text-slate-700 uppercase text-[10px]">Cruce de Cuentas del Chofer:</div>
                   <div className="flex justify-between"><span>Pagado de Mi Bolsillo (Este viaje):</span><b>+${totals.driverPocket.toFixed(2)}</b></div>
                   <div className="flex justify-between"><span>Deuda Acumulada ("Me deben"):</span><b>+${totals.oldDebts.toFixed(2)}</b></div>
                 </div>
-                <div className={`p-3 rounded-2xl text-center ${totals.netFinal >= 0 ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-950'}`}>
+                <div className={`p-3 rounded-2xl text-center ${totals.netFinal >= 0 ? 'bg-emerald-100 text-emerald-950' : 'bg-amber-100 text-amber-950'}`}>
                   <span className="text-[10px] font-bold uppercase block">Resultado Final del Cuadre</span>
                   <span className="text-lg font-black">
                     {totals.netFinal >= 0 ? `CHOFER ENTREGA: $${totals.netFinal.toFixed(2)} USD` : `PAGAR AL CHOFER: $${Math.abs(totals.netFinal).toFixed(2)} USD`}
                   </span>
                 </div>
-                <button onClick={sendWhatsApp} className="w-full bg-emerald-600 text-white font-black py-3 rounded-2xl text-sm shadow-lg">📤 ENVIAR CUADRE POR WHATSAPP</button>
+                <button onClick={sendWhatsApp} className="w-full min-h-[56px] bg-emerald-700 text-white font-black py-3 rounded-2xl text-sm shadow-lg">📤 ENVIAR CUADRE POR WHATSAPP</button>
               </div>
             </div>
           )}
 
-          {/* Modal Configuración Tasas y Anticipo */}
           {showSettings && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
               <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm space-y-3">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-black text-amber-400 uppercase text-sm">⚙️ Configurar Viaje y Tasas</h3>
-                  <button onClick={() => setShowSettings(false)}>✕</button>
+                  <h3 className="font-black text-amber-400 uppercase text-sm">⚙️ Configurar Viaje y Privacidad</h3>
+                  <button onClick={() => setShowSettings(false)} className="p-1">✕</button>
                 </div>
                 <div>
-                  <label className="text-[11px] text-slate-400 block">Nombre de la Ruta</label>
-                  <input value={trip.route} onChange={e => setTrip({...trip, route: e.target.value})} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                  <label className="text-xs text-slate-300 block">Nombre de la Ruta</label>
+                  <input value={trip.route} onChange={e => setTrip({...trip, route: e.target.value})} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl text-sm font-bold" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[11px] text-yellow-400 block">Tasa COP por 1 USD</label>
-                    <input type="number" value={trip.rateCOP} onChange={e => setTrip({...trip, rateCOP: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                    <label className="text-xs text-yellow-300 block">Tasa COP por 1 USD</label>
+                    <input type="number" value={trip.rateCOP} onChange={e => setTrip({...trip, rateCOP: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl text-sm font-bold" />
                   </div>
                   <div>
-                    <label className="text-[11px] text-sky-400 block">Tasa Bs por 1 USD</label>
-                    <input type="number" value={trip.rateVES} onChange={e => setTrip({...trip, rateVES: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                    <label className="text-xs text-sky-300 block">Tasa Bs por 1 USD</label>
+                    <input type="number" value={trip.rateVES} onChange={e => setTrip({...trip, rateVES: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2.5 rounded-xl text-sm font-bold" />
                   </div>
                 </div>
                 <div className="pt-2 border-t border-slate-800">
-                  <label className="text-xs font-bold text-emerald-400 block mb-2">Anticipo Recibido en Mano:</label>
+                  <label className="text-xs font-bold text-emerald-300 block mb-2">Anticipo Recibido en Mano:</label>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Dólares ($)</span>
-                      <input type="number" value={advance.USD} onChange={e => setAdvance({...advance, USD: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                      <span className="text-[11px] text-slate-300 block">Dólares ($)</span>
+                      <input type="number" value={advance.USD} onChange={e => setAdvance({...advance, USD: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Pesos (COP)</span>
-                      <input type="number" value={advance.COP} onChange={e => setAdvance({...advance, COP: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                      <span className="text-[11px] text-slate-300 block">Pesos (COP)</span>
+                      <input type="number" value={advance.COP} onChange={e => setAdvance({...advance, COP: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block">Bolívares (Bs)</span>
-                      <input type="number" value={advance.VES} onChange={e => setAdvance({...advance, VES: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-xl text-sm font-bold" />
+                      <span className="text-[11px] text-slate-300 block">Bolívares (Bs)</span>
+                      <input type="number" value={advance.VES} onChange={e => setAdvance({...advance, VES: Number(e.target.value)})} className="w-full bg-[#030712] border border-slate-700 p-2 rounded-xl text-sm font-bold" />
                     </div>
                   </div>
                 </div>
-                <button onClick={() => setShowSettings(false)} className="w-full bg-amber-500 text-black font-black py-3 rounded-2xl text-sm">GUARDAR CAMBIOS</button>
+                <button onClick={() => setShowSettings(false)} className="w-full min-h-[52px] bg-amber-400 text-[#030712] font-black py-3 rounded-2xl text-sm">GUARDAR CAMBIOS</button>
+                <div className="pt-2 border-t border-slate-800">
+                  <button onClick={handleDeleteAllData} className="w-full py-2.5 rounded-xl border border-red-800 bg-red-950/50 text-red-300 text-xs font-bold">
+                    🗑️ Eliminar cuenta y borrar todos los datos locales
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Modal Cuentas Pendientes */}
           {showDebts && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
               <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm space-y-3">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-black text-red-400 uppercase text-sm">📂 Archivo de Cuentas Pendientes</h3>
-                  <button onClick={() => setShowDebts(false)}>✕</button>
+                  <h3 className="font-black text-red-300 uppercase text-sm">📂 Archivo de Cuentas Pendientes</h3>
+                  <button onClick={() => setShowDebts(false)} className="p-1">✕</button>
                 </div>
                 <div className="space-y-2">
                   {pendingDebts.map(d => (
-                    <div key={d.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div key={d.id} className="bg-[#030712] p-3 rounded-xl border border-slate-800 flex justify-between items-center">
                       <div>
                         <div className={`text-xs font-bold ${d.settled ? 'line-through text-slate-500' : 'text-white'}`}>{d.title}</div>
                         <div className="text-sm font-black text-red-400">${d.amountUSD.toFixed(2)} USD</div>
                       </div>
-                      <button onClick={() => setPendingDebts(pendingDebts.map(x => x.id === d.id ? {...x, settled: !x.settled} : x))} className={`px-3 py-1 rounded-lg text-xs font-bold ${d.settled ? 'bg-slate-800 text-slate-400' : 'bg-emerald-600 text-white'}`}>
+                      <button onClick={() => setPendingDebts(pendingDebts.map(x => x.id === d.id ? {...x, settled: !x.settled} : x))} className={`px-3 py-2 rounded-lg text-xs font-bold ${d.settled ? 'bg-slate-800 text-slate-300' : 'bg-emerald-600 text-white'}`}>
                         {d.settled ? 'Pagado' : 'Marcar Pagado'}
                       </button>
                     </div>
@@ -453,18 +472,17 @@
                 <button onClick={() => {
                   const monto = prompt('Monto en USD que te quedaron debiendo:');
                   if (monto) setPendingDebts([...pendingDebts, { id: Date.now().toString(), title: 'Saldo pendiente viaje', amountUSD: Number(monto), settled: false }]);
-                }} className="w-full bg-slate-800 border border-slate-700 text-amber-400 font-bold py-2.5 rounded-xl text-xs">+ Agregar Deuda Anterior</button>
+                }} className="w-full min-h-[48px] bg-slate-800 border border-slate-700 text-amber-400 font-bold py-2.5 rounded-xl text-xs">+ Agregar Deuda Anterior</button>
               </div>
             </div>
           )}
 
-          {/* Modal Nota de Voz */}
           {showVoice && (
             <div className="fixed inset-0 bg-black/80 flex items-end justify-center p-4 z-50">
               <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-sm space-y-3 text-center">
                 <div className="text-4xl animate-pulse">🎙️</div>
                 <h3 className="font-black text-amber-400 text-sm uppercase">Dictado Rápido de Ruta</h3>
-                <p className="text-xs text-slate-400">Toca una frase rápida o dicta el gasto:</p>
+                <p className="text-xs text-slate-300">Toca una frase rápida o dicta el gasto:</p>
                 <div className="space-y-2 text-left">
                   {[
                     { t: '📦 "Pagué $15 de caleta en descarga"', c: 'caleta', m: 'USD', a: 15, u: 15 },
@@ -474,25 +492,25 @@
                     <button key={i} onClick={() => {
                       setExpenses([{ id: Date.now().toString(), category: p.c, note: p.t.replace(/"/g, ''), currency: p.m, amount: p.a, usdEq: p.u, fromDriver: !!p.d, hasReceipt: false, time: 'Voz' }, ...expenses]);
                       setShowVoice(false);
-                    }} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-xs font-bold text-slate-200 hover:border-amber-500">{p.t}</button>
+                    }} className="w-full bg-[#030712] border border-slate-800 p-3.5 rounded-xl text-xs font-bold text-slate-100 hover:border-amber-400">{p.t}</button>
                   ))}
                 </div>
-                <button onClick={() => setShowVoice(false)} className="w-full py-2 text-xs text-slate-400 font-bold">Cancelar</button>
+                <button onClick={() => setShowVoice(false)} className="w-full py-2.5 text-xs text-slate-300 font-bold">Cancelar</button>
               </div>
             </div>
           )}
 
-          {/* Barra Inferior Fija */}
-          <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 backdrop-blur border-t border-slate-800 px-4 py-2.5 flex justify-between items-center z-40">
-            <button onClick={() => setShowVuelto(true)} className="flex flex-col items-center text-[11px] font-bold text-slate-300 active:scale-95">
+          {/* Barra Inferior Fija en Zona del Pulgar >= 56dp (Agentes 3, 5 y 8) */}
+          <nav className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-slate-900/95 backdrop-blur border-t border-slate-800 px-4 pt-2.5 safe-bottom flex justify-between items-center z-40">
+            <button onClick={() => setShowVuelto(true)} className="min-h-[56px] px-3 flex flex-col items-center justify-center text-xs font-bold text-slate-200 active:scale-95">
               <span className="text-xl">🔄</span>
               <span>Vuelto</span>
             </button>
-            <button onClick={() => setShowVoice(true)} className="bg-amber-500 text-black px-5 py-3 rounded-full font-black text-sm shadow-lg shadow-amber-500/30 flex items-center gap-1.5 active:scale-95 transition">
+            <button onClick={() => setShowVoice(true)} className="min-h-[56px] bg-amber-400 text-[#030712] px-6 py-3 rounded-full font-black text-sm shadow-lg shadow-amber-500/20 flex items-center gap-2 active:scale-95 transition">
               <span>🎙️</span>
               <span>NOTA VOZ</span>
             </button>
-            <button onClick={() => setShowCuadre(true)} className="flex flex-col items-center text-[11px] font-bold text-emerald-400 active:scale-95">
+            <button onClick={() => setShowCuadre(true)} className="min-h-[56px] px-3 flex flex-col items-center justify-center text-xs font-bold text-emerald-300 active:scale-95">
               <span className="text-xl">🧾</span>
               <span>Cuadre</span>
             </button>
