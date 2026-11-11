@@ -1,0 +1,18 @@
+{
+  "name": "RutaCuadre Pro",
+  "short_name": "RutaCuadre",
+  "description": "Control de viáticos y liquidación de viajes de carga",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2554/2554978.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
