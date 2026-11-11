@@ -18,13 +18,11 @@
       --emerald: #34d399;
       --red: #f87171;
       --blue: #60a5fa;
-      --orange: #fb923c;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: calc(95px + env(safe-area-inset-bottom)); }
     .container { max-width: 520px; margin: 0 auto; }
-    
-    /* Header & Tablero */
+
     header { background: var(--card); border-bottom: 1px solid #1e293b; border-radius: 0 0 24px 24px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .route-btn { background: none; border: none; color: var(--text); text-align: left; cursor: pointer; }
@@ -46,7 +44,6 @@
     .drawer small { display: block; font-size: 10px; font-weight: 800; margin-bottom: 2px; }
     .drawer strong { font-size: 14px; font-weight: 900; color: #fff; }
 
-    /* Main */
     main { padding: 16px; }
     .sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .sec-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
@@ -61,28 +58,28 @@
     .cat-mantenimiento { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.55); color: #fdba74; }
     .cat-peaje { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.55); color: #6ee7b7; }
 
-    /* Lista Gastos */
     .exp-list { display: flex; flex-direction: column; gap: 8px; }
-    .exp-item { background: var(--card); border: 1px solid #1e293b; border-radius: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
-    .exp-left { display: flex; align-items: center; gap: 10px; }
-    .exp-emo { font-size: 24px; }
-    .exp-note { font-size: 14px; font-weight: 800; color: #fff; }
-    .exp-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .exp-right { display: flex; align-items: center; gap: 10px; text-align: right; }
+    .exp-item { background: var(--card); border: 1px solid #1e293b; border-radius: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .exp-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .exp-emo { font-size: 24px; flex-shrink: 0; }
+    .exp-note { font-size: 14px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .exp-meta { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+    .exp-right { display: flex; align-items: center; gap: 8px; text-align: right; flex-shrink: 0; }
     .exp-usd { font-size: 14px; font-weight: 900; color: var(--amber); }
     .exp-orig { font-size: 11px; color: var(--muted); }
     .del-btn { background: none; border: none; color: #64748b; font-size: 16px; font-weight: 900; padding: 6px; cursor: pointer; }
 
-    /* Footer */
+    .media-badge { background: #1e293b; border: 1px solid #475569; color: #38bdf8; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+    .media-badge.audio { color: #fbbf24; border-color: #b45309; background: rgba(245,158,11,0.12); }
+
     nav.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 520px; margin: 0 auto; background: rgba(15,23,42,0.96); border-top: 1px solid #1e293b; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; z-index: 40; }
     .nav-side { min-height: 56px; padding: 0 12px; background: none; border: none; color: var(--text); font-size: 11px; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
     .nav-side span:first-child { font-size: 20px; margin-bottom: 2px; }
     .nav-voice { min-height: 56px; background: var(--amber); color: #030712; border: none; border-radius: 999px; padding: 0 24px; font-size: 14px; font-weight: 900; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(251,191,36,0.3); cursor: pointer; }
 
-    /* Modales */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.82); display: none; align-items: flex-end; justify-content: center; padding: 12px; z-index: 50; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.84); display: none; align-items: flex-end; justify-content: center; padding: 12px; z-index: 50; }
     .modal-backdrop.active { display: flex; }
-    .modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+    .modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }
     .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .modal-title { font-size: 15px; font-weight: 900; color: var(--amber); text-transform: uppercase; }
     .close-btn { background: none; border: none; color: var(--muted); font-size: 20px; font-weight: 800; padding: 4px 8px; cursor: pointer; }
@@ -102,16 +99,22 @@
     .tag-btn { background: var(--card-2); border: 1px solid var(--border); color: #cbd5e1; padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; cursor: pointer; }
     .tag-btn.active { background: var(--amber); color: #030712; border-color: var(--amber); font-weight: 900; }
 
-    .switch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-    .sw-btn { min-height: 48px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-2); color: var(--text); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; text-align: center; padding: 4px; }
+    .switch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .sw-btn { min-height: 48px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-2); color: var(--text); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; text-align: center; padding: 6px; }
     .sw-btn.driver-active { background: #450a0a; border-color: #ef4444; color: #fecaca; }
     .sw-btn.receipt-active { background: #172554; border-color: #3b82f6; color: #bfdbfe; }
+
+    .photo-preview-box { display: none; align-items: center; justify-content: space-between; background: #030712; border: 1px solid #3b82f6; border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; }
+    .photo-preview-box.active { display: flex; }
+    .photo-preview-box img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid #60a5fa; }
+
+    .rec-btn { width: 88px; height: 88px; border-radius: 50%; border: 4px solid var(--amber); background: rgba(251,191,36,0.15); color: var(--amber); font-size: 34px; display: flex; align-items: center; justify-content: center; margin: 10px auto; cursor: pointer; transition: all 0.2s; }
+    .rec-btn.recording { background: #dc2626; border-color: #fca5a5; color: #fff; transform: scale(1.08); box-shadow: 0 0 25px rgba(220,38,38,0.7); }
 
     .primary-btn { width: 100%; min-height: 54px; background: var(--amber); color: #030712; border: none; border-radius: 16px; font-size: 14px; font-weight: 900; cursor: pointer; }
     .success-btn { width: 100%; min-height: 54px; background: #10b981; color: #030712; border: none; border-radius: 16px; font-size: 14px; font-weight: 900; cursor: pointer; }
     .danger-btn { width: 100%; min-height: 44px; background: rgba(127,29,29,0.4); border: 1px solid #b91c1c; color: #fca5a5; border-radius: 12px; font-size: 12px; font-weight: 800; margin-top: 12px; cursor: pointer; }
 
-    /* Ticket Recibo */
     .ticket { background: #fff; color: #0f172a; border-radius: 22px; padding: 20px; width: 100%; max-width: 400px; }
     .ticket-line { display: flex; justify-content: space-between; font-size: 12px; margin: 6px 0; }
     .ticket-sep { border-top: 1px dashed #cbd5e1; margin: 10px 0; }
@@ -124,7 +127,7 @@
       <div class="top-row">
         <button class="route-btn" onclick="openSettings()">
           <div class="route-title">🚛 <span id="lbl-route">El Vigía - Valencia</span> ⚙️</div>
-          <div class="route-sub" id="lbl-rates">Tasa: 4000 COP | 50 Bs (Toca para ajustar)</div>
+          <div class="route-sub" id="lbl-rates">Tasa: 4000 COP | 50 Bs (Ajustar)</div>
         </button>
         <div class="debt-pill" onclick="openDebts()">
           <small>Me deben</small>
@@ -191,7 +194,7 @@
         <span>🔄</span><span>Vuelto</span>
       </button>
       <button class="nav-voice" onclick="openVoice()">
-        <span>🎙️</span><span>NOTA VOZ</span>
+        <span>🎙️</span><span>GRABAR VOZ</span>
       </button>
       <button class="nav-side" style="color:#34d399;" onclick="openCuadre()">
         <span>🧾</span><span>Cuadre</span>
@@ -199,7 +202,7 @@
     </nav>
   </div>
 
-  <!-- MODAL GASTO -->
+  <!-- MODAL GASTO + CAMARA DE FACTURAS -->
   <div class="modal-backdrop" id="modal-exp">
     <div class="modal-card">
       <div class="modal-head">
@@ -215,14 +218,85 @@
       <div class="eq-hint" id="lbl-eq-hint"></div>
       <div class="bills-row" id="bills-row"></div>
       <div class="tags-wrap" id="tags-wrap"></div>
+
       <div class="switch-row">
         <button class="sw-btn" id="btn-sw-driver" onclick="toggleDriver()">🚛 Plata del Viaje</button>
         <label class="sw-btn" id="btn-sw-receipt">
-          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="markReceiptAttached()" />
-          <span id="lbl-sw-receipt">📷 Foto / Recibo</span>
+          <input type="file" id="inp-camera" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoCapture(event)" />
+          <span id="lbl-sw-receipt">📷 Tomar Foto Factura</span>
         </label>
       </div>
+
+      <!-- Vista previa de la foto de la factura -->
+      <div class="photo-preview-box" id="photo-preview-box">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <img id="img-thumb" src="" alt="Factura" />
+          <div>
+            <div style="font-size:12px;font-weight:800;color:#60a5fa;">📎 Foto de Factura Lista</div>
+            <div style="font-size:10px;color:#94a3b8;">Comprimida y guardada en memoria</div>
+          </div>
+        </div>
+        <button onclick="removePhotoAttachment()" style="background:none;border:none;color:#f87171;font-weight:900;font-size:14px;padding:6px;">✕</button>
+      </div>
+
       <button class="primary-btn" onclick="saveExpense()">GUARDAR GASTO</button>
+    </div>
+  </div>
+
+  <!-- MODAL VISOR DE FOTO -->
+  <div class="modal-backdrop" id="modal-photo-view" style="align-items:center;">
+    <div class="modal-card" style="text-align:center;">
+      <div class="modal-head">
+        <span class="modal-title">📎 Soporte / Factura del Gasto</span>
+        <button class="close-btn" onclick="closeModals()">✕</button>
+      </div>
+      <img id="full-receipt-img" src="" style="width:100%;max-height:65vh;object-fit:contain;border-radius:14px;border:1px solid #334155;margin-bottom:12px;" />
+      <button class="primary-btn" onclick="closeModals()">CERRAR VISOR</button>
+    </div>
+  </div>
+
+  <!-- MODAL GRABADORA DE AUDIO REAL -->
+  <div class="modal-backdrop" id="modal-voice">
+    <div class="modal-card" style="text-align:center;">
+      <div class="modal-head">
+        <span class="modal-title">🎙️ Nota de Voz de Ruta</span>
+        <button class="close-btn" onclick="stopAndCloseVoice()">✕</button>
+      </div>
+      <p style="font-size:12px;color:#cbd5e1;margin-bottom:6px;" id="rec-status">Toca el micrófono para grabar el gasto con tu voz</p>
+      <div style="font-size:18px;font-weight:900;color:#fbbf24;min-height:24px;" id="rec-timer">00:00</div>
+
+      <button class="rec-btn" id="btn-rec-toggle" onclick="toggleRecording()">🎙️</button>
+
+      <!-- Reproductor previo y formulario rápido del audio -->
+      <div id="voice-preview-area" style="display:none;background:#030712;border:1px solid #334155;border-radius:16px;padding:12px;margin:12px 0;text-align:left;">
+        <div style="font-size:11px;font-weight:800;color:#34d399;margin-bottom:6px;">✅ Audio grabado en el teléfono:</div>
+        <audio id="audio-preview-player" controls style="width:100%;height:36px;margin-bottom:10px;"></audio>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">Nota / Transcripción detectada:</div>
+        <input type="text" id="voice-note-inp" class="small-input" placeholder="Ej: Caleta o Refresco..." style="margin-bottom:8px;" />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div>
+            <small style="font-size:10px;color:#cbd5e1;">Monto del Gasto</small>
+            <input type="number" id="voice-amt-inp" class="small-input" placeholder="Ej: 10" />
+          </div>
+          <div>
+            <small style="font-size:10px;color:#cbd5e1;">Moneda</small>
+            <select id="voice-curr-inp" class="small-input">
+              <option value="USD">💵 USD ($)</option>
+              <option value="COP">🇨🇴 Pesos (COP)</option>
+              <option value="VES">🇻🇪 Bolívares (Bs)</option>
+            </select>
+          </div>
+        </div>
+        <button class="success-btn" onclick="saveRecordedVoiceExpense()">💾 GUARDAR GASTO CON AUDIO</button>
+      </div>
+
+      <div style="border-top:1px solid #1e293b;padding-top:10px;margin-top:8px;text-align:left;">
+        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;margin-bottom:6px;">O usa un comando rápido (1 toque):</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="sw-btn" style="justify-content:flex-start;padding:10px;" onclick="quickVoice('caleta','USD',15,'Caleta en descarga',false)">📦 "Pagué $15 de caleta en descarga"</button>
+          <button class="sw-btn" style="justify-content:flex-start;padding:10px;" onclick="quickVoice('comida','COP',20000,'Almuerzo y refresco',false)">🍔 "Gasté 20 mil pesos en almuerzo y refresco"</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -343,21 +417,6 @@
     </div>
   </div>
 
-  <!-- MODAL VOZ -->
-  <div class="modal-backdrop" id="modal-voice">
-    <div class="modal-card" style="text-align:center;">
-      <div style="font-size:38px;margin-bottom:6px;">🎙️</div>
-      <div class="modal-title" style="margin-bottom:6px;">Dictado Rápido de Ruta</div>
-      <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;">Toca un comando rápido de voz para registrarlo:</p>
-      <div style="display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:12px;">
-        <button class="sw-btn" style="justify-content:flex-start;padding:12px;" onclick="quickVoice('caleta','USD',15,'Caleta en descarga',false)">📦 "Pagué $15 de caleta en descarga"</button>
-        <button class="sw-btn" style="justify-content:flex-start;padding:12px;" onclick="quickVoice('comida','COP',20000,'Almuerzo y refresco',false)">🍔 "Gasté 20 mil pesos en almuerzo y refresco"</button>
-        <button class="sw-btn" style="justify-content:flex-start;padding:12px;" onclick="quickVoice('mantenimiento','USD',10,'Cauchera en ruta',true)">🔧 "Puse $10 de mi bolsillo para cauchera"</button>
-      </div>
-      <button class="close-btn" style="font-size:13px;" onclick="closeModals()">Cancelar</button>
-    </div>
-  </div>
-
   <script>
     const CATS = {
       comida: { name: 'Comida / Refresco', emo: '🍔', tags: ['Almuerzo', 'Refresco y Agua', 'Desayuno', 'Cena', 'Café y Pan'] },
@@ -379,11 +438,20 @@
     let walletAdj = load('rc_walletAdj', { USD: 0, COP: 0, VES: 0 });
     let debts = load('rc_debts', [{ id: 'd1', title: 'Viaje anterior - Repuesto', amountUSD: 15.0, settled: false }]);
     let expenses = load('rc_expenses', [
-      { id: '1', category: 'caleta', note: 'Carga inicial de mercancía', currency: 'USD', amount: 20, usdEq: 20.0, fromDriver: false, hasReceipt: false, time: '06:30 AM' },
-      { id: '2', category: 'comida', note: 'Desayuno y refrescos', currency: 'COP', amount: 24000, usdEq: 6.0, fromDriver: false, hasReceipt: false, time: '09:15 AM' }
+      { id: '1', category: 'caleta', note: 'Carga inicial de mercancía', currency: 'USD', amount: 20, usdEq: 20.0, fromDriver: false, hasReceipt: false, photoData: null, audioData: null, time: '06:30 AM' },
+      { id: '2', category: 'comida', note: 'Desayuno y refrescos', currency: 'COP', amount: 24000, usdEq: 6.0, fromDriver: false, hasReceipt: false, photoData: null, audioData: null, time: '09:15 AM' }
     ]);
 
-    let curCat = 'comida', curCurr = 'USD', curNote = '', curDriver = false, curReceipt = false;
+    let curCat = 'comida', curCurr = 'USD', curNote = '', curDriver = false, curReceipt = false, curPhotoData = null;
+
+    // Estado de Grabación de Audio
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let curAudioData = null;
+    let recInterval = null;
+    let recSeconds = 0;
+    let speechRec = null;
 
     function toUSD(amt, curr) {
       const n = Number(amt) || 0;
@@ -433,9 +501,14 @@
         <div class="exp-item">
           <div class="exp-left">
             <span class="exp-emo">${CATS[e.category] ? CATS[e.category].emo : '📌'}</span>
-            <div>
+            <div style="min-width:0;flex:1;">
               <div class="exp-note">${e.note}</div>
-              <div class="exp-meta">${e.time} • <b style="color:${e.fromDriver ? '#f87171' : '#34d399'}">${e.fromDriver ? '👛 Mi Bolsillo' : 'Plata Viaje'}</b> • ${e.hasReceipt ? '📎 Con Factura' : 'Sin Recibo'}</div>
+              <div class="exp-meta">
+                <span>${e.time}</span> •
+                <b style="color:${e.fromDriver ? '#f87171' : '#34d399'}">${e.fromDriver ? '👛 Mi Bolsillo' : 'Plata Viaje'}</b>
+                ${e.photoData ? `<button class="media-badge" onclick="viewReceiptPhoto('${e.id}')">📷 Ver Factura</button>` : (e.hasReceipt ? '<span>• 📎 Factura</span>' : '')}
+                ${e.audioData ? `<button class="media-badge audio" onclick="playSavedAudio('${e.id}')">▶️ Oír Nota</button>` : ''}
+              </div>
             </div>
           </div>
           <div class="exp-right">
@@ -454,9 +527,11 @@
     }
 
     function openExpenseModal(cat) {
-      curCat = cat; curCurr = 'USD'; curNote = ''; curDriver = false; curReceipt = (cat === 'mantenimiento' || cat === 'peaje');
+      curCat = cat; curCurr = 'USD'; curNote = ''; curDriver = false; curReceipt = false; curPhotoData = null;
       document.getElementById('exp-modal-title').textContent = `${CATS[cat].emo} ${CATS[cat].name}`;
       document.getElementById('inp-exp-amt').value = '';
+      document.getElementById('inp-camera').value = '';
+      document.getElementById('photo-preview-box').classList.remove('active');
       setExpCurr('USD');
       renderTags();
       updateSwitchesUI();
@@ -479,6 +554,8 @@
     function updateEqHint() {
       const val = Number(document.getElementById('inp-exp-amt').value) || 0;
       document.getElementById('lbl-eq-hint').textContent = val > 0 ? `Equivale a: $${toUSD(val, curCurr).toFixed(2)} USD` : '';
+      // Persistencia de borrador por si abre la cámara
+      save('rc_temp_draft', { active: true, curCat, curCurr, amt: document.getElementById('inp-exp-amt').value, curNote, curDriver });
     }
 
     function renderTags() {
@@ -487,20 +564,60 @@
 
     function selectTag(t) { curNote = t; renderTags(); }
     function toggleDriver() { curDriver = !curDriver; updateSwitchesUI(); }
-    function markReceiptAttached() { curReceipt = true; updateSwitchesUI(); }
+
+    // Compresión automática de foto de factura con Canvas (Agente 7 y 12)
+    function handlePhotoCapture(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 900;
+          let w = img.width, h = img.height;
+          if (w > h && w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; }
+          else if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          curPhotoData = canvas.toDataURL('image/jpeg', 0.62);
+          curReceipt = true;
+          document.getElementById('img-thumb').src = curPhotoData;
+          document.getElementById('photo-preview-box').classList.add('active');
+          updateSwitchesUI();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removePhotoAttachment() {
+      curPhotoData = null; curReceipt = false;
+      document.getElementById('inp-camera').value = '';
+      document.getElementById('photo-preview-box').classList.remove('active');
+      updateSwitchesUI();
+    }
+
+    function viewReceiptPhoto(id) {
+      const item = expenses.find(x => x.id === id);
+      if (!item || !item.photoData) return;
+      document.getElementById('full-receipt-img').src = item.photoData;
+      document.getElementById('modal-photo-view').classList.add('active');
+    }
 
     function updateSwitchesUI() {
       const bDrv = document.getElementById('btn-sw-driver');
       bDrv.textContent = curDriver ? '👛 De Mi Bolsillo' : '🚛 Plata del Viaje';
       bDrv.classList.toggle('driver-active', curDriver);
       const bRec = document.getElementById('btn-sw-receipt');
-      document.getElementById('lbl-sw-receipt').textContent = curReceipt ? '📎 Factura Adjunta' : '📷 Tomar Foto Recibo';
+      document.getElementById('lbl-sw-receipt').textContent = curReceipt ? '📷 Cambiar Foto' : '📷 Tomar Foto Factura';
       bRec.classList.toggle('receipt-active', curReceipt);
     }
 
     function saveExpense() {
       const val = parseFloat(document.getElementById('inp-exp-amt').value);
-      if (!val || val <= 0) return;
+      if (!val || val <= 0) { alert('Ingresa el monto del gasto'); return; }
       const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       expenses.unshift({
         id: Date.now().toString(),
@@ -511,10 +628,127 @@
         usdEq: Number(toUSD(val, curCurr).toFixed(2)),
         fromDriver: curDriver,
         hasReceipt: curReceipt,
+        photoData: curPhotoData,
+        audioData: null,
+        time: now
+      });
+      save('rc_temp_draft', { active: false });
+      closeModals();
+      render();
+    }
+
+    // GRABADORA DE AUDIO REAL + RECONOCIMIENTO DE VOZ
+    function openVoice() {
+      curAudioData = null;
+      isRecording = false;
+      document.getElementById('voice-preview-area').style.display = 'none';
+      document.getElementById('btn-rec-toggle').classList.remove('recording');
+      document.getElementById('btn-rec-toggle').textContent = '🎙️';
+      document.getElementById('rec-status').textContent = 'Toca el botón central para empezar a grabar';
+      document.getElementById('rec-timer').textContent = '00:00';
+      document.getElementById('modal-voice').classList.add('active');
+    }
+
+    async function toggleRecording() {
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunks = [];
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              curAudioData = reader.result;
+              document.getElementById('audio-preview-player').src = curAudioData;
+              document.getElementById('voice-preview-area').style.display = 'block';
+            };
+            reader.readAsDataURL(blob);
+            stream.getTracks().forEach(t => t.stop());
+          };
+          mediaRecorder.start();
+          isRecording = true;
+          recSeconds = 0;
+          document.getElementById('btn-rec-toggle').classList.add('recording');
+          document.getElementById('btn-rec-toggle').textContent = '⏹️';
+          document.getElementById('rec-status').textContent = 'Grabando voz... Toca ⏹️ para detener';
+          recInterval = setInterval(() => {
+            recSeconds++;
+            const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+            const s = String(recSeconds % 60).padStart(2, '0');
+            document.getElementById('rec-timer').textContent = `${m}:${s}`;
+            if (recSeconds >= 25) toggleRecording(); // Límite seguro de 25 seg para almacenamiento local
+          }, 1000);
+
+          // Intentar transcripción en vivo si el teléfono lo soporta
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          if (SpeechRecognition) {
+            speechRec = new SpeechRecognition();
+            speechRec.lang = 'es-VE';
+            speechRec.onresult = (ev) => {
+              const transcript = ev.results[0][0].transcript;
+              document.getElementById('voice-note-inp').value = transcript;
+              const numMatch = transcript.match(/\d+/);
+              if (numMatch) document.getElementById('voice-amt-inp').value = numMatch[0];
+              if (/peso|mil/i.test(transcript)) document.getElementById('voice-curr-inp').value = 'COP';
+              else if (/bol[ií]var|bs/i.test(transcript)) document.getElementById('voice-curr-inp').value = 'VES';
+              else document.getElementById('voice-curr-inp').value = 'USD';
+            };
+            speechRec.start();
+          }
+        } catch (err) {
+          alert('Permite el acceso al micrófono para grabar notas de voz.');
+        }
+      } else {
+        isRecording = false;
+        clearInterval(recInterval);
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        if (speechRec) { try { speechRec.stop(); } catch(e) {} }
+        document.getElementById('btn-rec-toggle').classList.remove('recording');
+        document.getElementById('btn-rec-toggle').textContent = '🎙️';
+        document.getElementById('rec-status').textContent = 'Audio listo. Verifica el monto y guarda:';
+      }
+    }
+
+    function stopAndCloseVoice() {
+      if (isRecording) toggleRecording();
+      closeModals();
+    }
+
+    function saveRecordedVoiceExpense() {
+      const amt = parseFloat(document.getElementById('voice-amt-inp').value) || 0;
+      if (amt <= 0) { alert('Indica el monto del gasto grabado'); return; }
+      const curr = document.getElementById('voice-curr-inp').value;
+      const note = document.getElementById('voice-note-inp').value.trim() || 'Nota de voz en ruta';
+      let cat = 'comida';
+      if (/caleta|obrero|carga|descarga/i.test(note)) cat = 'caleta';
+      else if (/caucho|aceite|freno|repuesto|taller/i.test(note)) cat = 'mantenimiento';
+      else if (/peaje|gasoil|gasolina/i.test(note)) cat = 'peaje';
+
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      expenses.unshift({
+        id: Date.now().toString(),
+        category: cat,
+        note: '🎙️ ' + note,
+        currency: curr,
+        amount: amt,
+        usdEq: Number(toUSD(amt, curr).toFixed(2)),
+        fromDriver: false,
+        hasReceipt: false,
+        photoData: null,
+        audioData: curAudioData,
         time: now
       });
       closeModals();
       render();
+    }
+
+    function playSavedAudio(id) {
+      const item = expenses.find(x => x.id === id);
+      if (!item || !item.audioData) return;
+      const audio = new Audio(item.audioData);
+      audio.play();
     }
 
     function delExpense(id) {
@@ -541,7 +775,7 @@
       walletAdj.COP += rC;
       walletAdj.VES += rV;
       const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      expenses.unshift({ id: Date.now().toString(), category: 'comida', note: `Pago con billete $${b} (Vuelto mixto)`, currency: 'USD', amount: c, usdEq: c, fromDriver: false, hasReceipt: false, time: now });
+      expenses.unshift({ id: Date.now().toString(), category: 'comida', note: `Pago con billete $${b} (Vuelto mixto)`, currency: 'USD', amount: c, usdEq: c, fromDriver: false, hasReceipt: false, photoData: null, audioData: null, time: now });
       closeModals(); render();
     }
 
@@ -559,7 +793,9 @@
 
     function sendWhatsApp() {
       const st = getStats();
-      const text = `🚛 *LIQUIDACIÓN DE VIAJE - RUTACUADRE PRO*\n📍 *Ruta:* ${trip.route}\n💱 *Tasas:* ${trip.rateCOP} COP/$ | ${trip.rateVES} Bs/$\n\n💵 *Anticipo Unificado:* $${st.antUSD.toFixed(2)} USD\n📉 *Total Gastado:* -$${st.spentTotal.toFixed(2)} USD\n💰 *Sobrante de Viaje:* $${st.remTrip.toFixed(2)} USD\n\n👛 *Puesto del Bolsillo del Chofer:* +$${st.driverPocket.toFixed(2)}\n📂 *Cuentas Pendientes Anteriores:* +$${st.oldDebts.toFixed(2)}\n\n⚖️ *BALANCE FINAL:* ${st.net >= 0 ? `El chofer entrega $${st.net.toFixed(2)} USD` : `FAVOR REEMBOLSAR AL CHOFER: $${Math.abs(st.net).toFixed(2)} USD`}`;
+      const conSoporte = expenses.filter(e => e.photoData || e.hasReceipt).length;
+      const conAudio = expenses.filter(e => e.audioData).length;
+      const text = `🚛 *LIQUIDACIÓN DE VIAJE - RUTACUADRE PRO*\n📍 *Ruta:* ${trip.route}\n💱 *Tasas:* ${trip.rateCOP} COP/$ | ${trip.rateVES} Bs/$\n\n💵 *Anticipo Unificado:* $${st.antUSD.toFixed(2)} USD\n📉 *Total Gastado:* -$${st.spentTotal.toFixed(2)} USD\n📎 *Soportes:* ${conSoporte} fotos de facturas | ${conAudio} notas de voz\n💰 *Sobrante de Viaje:* $${st.remTrip.toFixed(2)} USD\n\n👛 *Puesto del Bolsillo del Chofer:* +$${st.driverPocket.toFixed(2)}\n📂 *Cuentas Pendientes Anteriores:* +$${st.oldDebts.toFixed(2)}\n\n⚖️ *BALANCE FINAL:* ${st.net >= 0 ? `El chofer entrega $${st.net.toFixed(2)} USD` : `FAVOR REEMBOLSAR AL CHOFER: $${Math.abs(st.net).toFixed(2)} USD`}`;
       window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
     }
 
@@ -587,11 +823,7 @@
       if (confirm('¿Eliminar todos los datos locales y restaurar de fábrica?')) { localStorage.clear(); location.reload(); }
     }
 
-    function openDebts() {
-      renderDebtsList();
-      document.getElementById('modal-debts').classList.add('active');
-    }
-
+    function openDebts() { renderDebtsList(); document.getElementById('modal-debts').classList.add('active'); }
     function renderDebtsList() {
       document.getElementById('debts-list').innerHTML = debts.map(d => `
         <div style="background:#030712;padding:12px;border-radius:12px;border:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;">
@@ -605,32 +837,21 @@
         </div>
       `).join('');
     }
-
-    function toggleDebt(id) {
-      debts = debts.map(d => d.id === id ? {...d, settled: !d.settled} : d);
-      renderDebtsList(); render();
-    }
-
+    function toggleDebt(id) { debts = debts.map(d => d.id === id ? {...d, settled: !d.settled} : d); renderDebtsList(); render(); }
     function addDebtPrompt() {
       const m = prompt('Monto en USD que te quedaron debiendo:');
-      if (m && Number(m) > 0) {
-        debts.push({ id: Date.now().toString(), title: 'Saldo pendiente viaje', amountUSD: Number(m), settled: false });
-        renderDebtsList(); render();
-      }
+      if (m && Number(m) > 0) { debts.push({ id: Date.now().toString(), title: 'Saldo pendiente viaje', amountUSD: Number(m), settled: false }); renderDebtsList(); render(); }
     }
 
-    function openVoice() { document.getElementById('modal-voice').classList.add('active'); }
     function quickVoice(cat, curr, amt, note, drv) {
-      expenses.unshift({ id: Date.now().toString(), category: cat, note: note, currency: curr, amount: amt, usdEq: Number(toUSD(amt, curr).toFixed(2)), fromDriver: drv, hasReceipt: false, time: 'Voz' });
+      expenses.unshift({ id: Date.now().toString(), category: cat, note: note, currency: curr, amount: amt, usdEq: Number(toUSD(amt, curr).toFixed(2)), fromDriver: drv, hasReceipt: false, photoData: null, audioData: null, time: 'Voz' });
       closeModals(); render();
     }
 
     render();
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(() => {
-        console.log('Modo Offline activado');
-      }).catch(() => {});
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
   </script>
 </body>
