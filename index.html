@@ -1,0 +1,1809 @@
+import React, { useState, useMemo } from 'react';
+import {
+  Truck,
+  Wallet,
+  Mic,
+  RefreshCw,
+  FileText,
+  Camera,
+  CheckCircle2,
+  AlertTriangle,
+  Trash2,
+  Plus,
+  Settings,
+  Share2,
+  Copy,
+  Check,
+  DollarSign,
+  ArrowRightLeft,
+  UserCheck,
+  Receipt,
+  FolderClock,
+  X,
+  Sparkles,
+  ChevronRight,
+  ShieldAlert,
+  Navigation
+} from 'lucide-react';
+
+// Categorías principales con configuración visual de alto contraste
+const CATEGORIES = {
+  comida: {
+    id: 'comida',
+    name: 'Comida y Refrescos',
+    shortName: 'Comida / Refresco',
+    emoji: '🍔',
+    color: 'from-amber-500 to-yellow-600',
+    border: 'border-amber-500/50',
+    bgSoft: 'bg-amber-500/15',
+    text: 'text-amber-400',
+    defaultReceipt: false,
+    quickTags: ['Almuerzo en vía', 'Refresco y Agua', 'Desayuno / Empanadas', 'Café y Pan', 'Cena']
+  },
+  caleta: {
+    id: 'caleta',
+    name: 'Caleta / Mano de Obra',
+    shortName: 'Caleta / Obreros',
+    emoji: '📦',
+    color: 'from-blue-600 to-cyan-600',
+    border: 'border-blue-500/50',
+    bgSoft: 'bg-blue-500/15',
+    text: 'text-blue-400',
+    defaultReceipt: false,
+    quickTags: ['Descarga mercado', 'Carga de camión', 'Trasbordo mercancía', 'Ayudante extra', 'Vigilancia']
+  },
+  mantenimiento: {
+    id: 'mantenimiento',
+    name: 'Mantenimiento y Caucho',
+    shortName: 'Mantenimiento',
+    emoji: '🔧',
+    color: 'from-orange-600 to-red-600',
+    border: 'border-orange-500/50',
+    bgSoft: 'bg-orange-500/15',
+    text: 'text-orange-400',
+    defaultReceipt: true,
+    quickTags: ['Cauchera / Parche', 'Aceite / Liga freno', 'Repuesto emergencia', 'Lavado / Engrase', 'Fallo eléctrico']
+  },
+  peaje: {
+    id: 'peaje',
+    name: 'Peaje y Gasoil',
+    shortName: 'Peajes / Gasoil',
+    emoji: '⛽',
+    color: 'from-emerald-600 to-teal-600',
+    border: 'border-emerald-500/50',
+    bgSoft: 'bg-emerald-500/15',
+    text: 'text-emerald-400',
+    defaultReceipt: true,
+    quickTags: ['Ticket de Peaje', 'Surtido Gasoil', 'Peaje Pesado', 'Balanza / Control']
+  }
+};
+
+// Billetes rápidos por cada moneda
+const QUICK_BILLS = {
+  USD: [
+    { label: '+$1', value: 1 },
+    { label: '+$5', value: 5 },
+    { label: '+$10', value: 10 },
+    { label: '+$20', value: 20 },
+    { label: '+$50', value: 50 }
+  ],
+  COP: [
+    { label: '+2 mil', value: 2000 },
+    { label: '+5 mil', value: 5000 },
+    { label: '+10 mil', value: 10000 },
+    { label: '+20 mil', value: 20000 },
+    { label: '+50 mil', value: 50000 },
+    { label: '+100 mil', value: 100000 }
+  ],
+  VES: [
+    { label: '+50 Bs', value: 50 },
+    { label: '+100 Bs', value: 100 },
+    { label: '+200 Bs', value: 200 },
+    { label: '+500 Bs', value: 500 },
+    { label: '+1.000 Bs', value: 1000 }
+  ]
+};
+
+// Comandos de voz preconfigurados para prueba inmediata o micrófono real
+const VOICE_PRESETS = [
+  {
+    phrase: '"Pagué 15 dólares de caleta en descarga sin recibo"',
+    category: 'caleta',
+    currency: 'USD',
+    amount: 15,
+    note: 'Descarga mercado (Nota de voz)',
+    fromDriverPocket: false,
+    hasReceipt: false
+  },
+  {
+    phrase: '"Gasté 16 mil pesos en refrescos y agua"',
+    category: 'comida',
+    currency: 'COP',
+    amount: 16000,
+    note: 'Refrescos y agua en ruta (Voz)',
+    fromDriverPocket: false,
+    hasReceipt: false
+  },
+  {
+    phrase: '"Puse 12 dólares de mi bolsillo para cauchera con factura"',
+    category: 'mantenimiento',
+    currency: 'USD',
+    amount: 12,
+    note: 'Cauchera / Parche emergencia (Voz)',
+    fromDriverPocket: true,
+    hasReceipt: true
+  },
+  {
+    phrase: '"Pagué 270 bolívares en peaje con ticket"',
+    category: 'peaje',
+    currency: 'VES',
+    amount: 270,
+    note: 'Peaje en ruta (Voz)',
+    fromDriverPocket: false,
+    hasReceipt: true
+  }
+];
+
+export default function App() {
+  // Configuración del viaje y tasas de cambio ancladas
+  const [tripInfo, setTripInfo] = useState({
+    route: 'El Vigía ➔ Valencia',
+    truckPlate: 'A34BC9V',
+    driverName: 'Chofer Principal',
+    rateCOP: 4000, // 4,000 COP = 1 USD
+    rateVES: 45.0  // 45 Bs = 1 USD
+  });
+
+  // Gavetas de dinero (Saldo real físico/digital en mano del viático)
+  const [initialAdvance, setInitialAdvance] = useState({
+    USD: 140,
+    COP: 160000, // Equivale a $40 a tasa 4000
+    VES: 1350    // Equivale a $30 a tasa 45 -> Total Anticipo = $210.00 USD
+  });
+
+  // Ajustes en las gavetas provocados por vueltos cruzados
+  const [walletAdjustments, setWalletAdjustments] = useState({
+    USD: 0,
+    COP: 0,
+    VES: 0
+  });
+
+  // Archivo de Cuentas Pendientes ("Me deben" de viajes anteriores)
+  const [pendingDebts, setPendingDebts] = useState([
+    {
+      id: 'd-1',
+      title: 'Viaje anterior (Maracaibo) - Repuesto',
+      date: 'Hace 4 días',
+      amountUSD: 15.0,
+      settled: false
+    }
+  ]);
+
+  // Bitácora de gastos del viaje actual con 3 registros iniciales realistas
+  const [expenses, setExpenses] = useState([
+    {
+      id: 'exp-1',
+      category: 'caleta',
+      note: 'Carga inicial de mercancía',
+      currency: 'USD',
+      amount: 25,
+      usdEquivalent: 25.0,
+      rateUsed: 1,
+      fromDriverPocket: false,
+      hasReceipt: false,
+      receiptCode: null,
+      time: '06:15 AM'
+    },
+    {
+      id: 'exp-2',
+      category: 'comida',
+      note: 'Desayuno y 2 refrescos en ruta',
+      currency: 'COP',
+      amount: 24000,
+      usdEquivalent: 6.0,
+      rateUsed: 4000,
+      fromDriverPocket: false,
+      hasReceipt: false,
+      receiptCode: null,
+      time: '09:40 AM'
+    },
+    {
+      id: 'exp-3',
+      category: 'mantenimiento',
+      note: 'Cauchera y válvula trasera',
+      currency: 'VES',
+      amount: 675,
+      usdEquivalent: 15.0,
+      rateUsed: 45,
+      fromDriverPocket: true, // Pagado del bolsillo del chofer
+      hasReceipt: true,
+      receiptCode: 'FOTO-REC-882',
+      time: '12:20 PM'
+    }
+  ]);
+
+  // Estados de Modales activos
+  const [activeCategoryModal, setActiveCategoryModal] = useState(null);
+  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [showCuadreModal, setShowCuadreModal] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Estados del Modal de Gasto Rápido (3 segundos)
+  const [expCurrency, setExpCurrency] = useState('USD');
+  const [expAmount, setExpAmount] = useState('');
+  const [expNote, setExpNote] = useState('');
+  const [expFromDriver, setExpFromDriver] = useState(false);
+  const [expHasReceipt, setExpHasReceipt] = useState(false);
+  const [expPhotoAttached, setExpPhotoAttached] = useState(false);
+
+  // Estados de la Calculadora de Vuelto Cruzado
+  const [changePaidCurrency, setChangePaidCurrency] = useState('USD');
+  const [changeBillGiven, setChangeBillGiven] = useState(20);
+  const [changeExpenseCategory, setChangeExpenseCategory] = useState('comida');
+  const [changeExpenseUSD, setChangeExpenseUSD] = useState(6);
+  const [changeRetUSD, setChangeRetUSD] = useState(10);
+  const [changeRetCOP, setChangeRetCOP] = useState(16000);
+  const [changeRetVES, setChangeRetVES] = useState(0);
+
+  // Estado para nueva deuda pendiente en "Me deben"
+  const [newDebtTitle, setNewDebtTitle] = useState('');
+  const [newDebtAmount, setNewDebtAmount] = useState('');
+
+  // Estado de copiado al portapapeles y notificaciones rápidas
+  const [copiedText, setCopiedText] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+  const [isListeningVoice, setIsListeningVoice] = useState(false);
+
+  const triggerToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3200);
+  };
+
+  // Conversión de cualquier monto a USD según tasa actual
+  const convertToUSD = (amount, currency) => {
+    const num = Number(amount) || 0;
+    if (currency === 'USD') return num;
+    if (currency === 'COP') return num / (tripInfo.rateCOP || 4000);
+    if (currency === 'VES') return num / (tripInfo.rateVES || 45);
+    return num;
+  };
+
+  // Formateo claro de monedas (ej. 160.000 COP -> 160 mil COP)
+  const formatCOPShort = (cop) => {
+    const abs = Math.abs(cop);
+    if (abs >= 1000) {
+      const k = cop / 1000;
+      return `${Number.isInteger(k) ? k : k.toFixed(1)} mil`;
+    }
+    return `${cop}`;
+  };
+
+  const formatCurrencyFull = (amount, currency) => {
+    const num = Number(amount) || 0;
+    if (currency === 'USD') return `$${num.toFixed(2)}`;
+    if (currency === 'COP') return `${num.toLocaleString('es-CO')} COP`;
+    if (currency === 'VES') return `Bs. ${num.toLocaleString('es-VE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    return `${num}`;
+  };
+
+  // Cálculos Maestros en tiempo real (Gavetas, Saldo Unificado y Liquidación)
+  const summary = useMemo(() => {
+    // 1. Anticipo inicial unificado en USD
+    const initialUSDTotal =
+      initialAdvance.USD +
+      initialAdvance.COP / tripInfo.rateCOP +
+      initialAdvance.VES / tripInfo.rateVES;
+
+    // 2. Gastos pagados con Plata del Viaje vs Bolsillo del Chofer
+    let spentFromTripUSD = 0;
+    let spentFromDriverPocketUSD = 0;
+
+    let spentByOrigin = { USD: 0, COP: 0, VES: 0 };
+
+    const byCategory = {
+      comida: { usd: 0, items: [], withReceipt: 0, noReceipt: 0, rawUSD: 0, rawCOP: 0, rawVES: 0 },
+      caleta: { usd: 0, items: [], withReceipt: 0, noReceipt: 0, rawUSD: 0, rawCOP: 0, rawVES: 0 },
+      mantenimiento: { usd: 0, items: [], withReceipt: 0, noReceipt: 0, rawUSD: 0, rawCOP: 0, rawVES: 0 },
+      peaje: { usd: 0, items: [], withReceipt: 0, noReceipt: 0, rawUSD: 0, rawCOP: 0, rawVES: 0 }
+    };
+
+    expenses.forEach((e) => {
+      if (e.fromDriverPocket) {
+        spentFromDriverPocketUSD += e.usdEquivalent;
+      } else {
+        spentFromTripUSD += e.usdEquivalent;
+        spentByOrigin[e.currency] = (spentByOrigin[e.currency] || 0) + e.amount;
+      }
+
+      if (byCategory[e.category]) {
+        byCategory[e.category].usd += e.usdEquivalent;
+        byCategory[e.category].items.push(e);
+        if (e.hasReceipt) {
+          byCategory[e.category].withReceipt += e.usdEquivalent;
+        } else {
+          byCategory[e.category].noReceipt += e.usdEquivalent;
+        }
+        if (e.currency === 'USD') byCategory[e.category].rawUSD += e.amount;
+        if (e.currency === 'COP') byCategory[e.category].rawCOP += e.amount;
+        if (e.currency === 'VES') byCategory[e.category].rawVES += e.amount;
+      }
+    });
+
+    // 3. Saldo real disponible en cada una de las 3 gavetas físicas/digitales
+    const drawerUSD = initialAdvance.USD - spentByOrigin.USD + walletAdjustments.USD;
+    const drawerCOP = initialAdvance.COP - spentByOrigin.COP + walletAdjustments.COP;
+    const drawerVES = initialAdvance.VES - spentByOrigin.VES + walletAdjustments.VES;
+
+    // 4. Saldo Total Disponible Unificado en USD (de los fondos del viaje)
+    const remainingTripUSD = initialUSDTotal - spentFromTripUSD;
+
+    // 5. Deudas acumuladas de viajes anteriores no pagadas
+    const previousDebtsUSD = pendingDebts
+      .filter((d) => !d.settled)
+      .reduce((acc, item) => acc + item.amountUSD, 0);
+
+    // 6. Total que el jefe le debe al chofer (Bolsillo en este viaje + Cuentas pendientes)
+    const totalOwedToDriverUSD = spentFromDriverPocketUSD + previousDebtsUSD;
+
+    // 7. Liquidación Final Neta:
+    // Si remainingTripUSD > totalOwedToDriverUSD -> Chofer devuelve la diferencia
+    // Si totalOwedToDriverUSD > remainingTripUSD -> Jefe debe pagarle la diferencia al chofer
+    const finalNetBalanceUSD = remainingTripUSD - totalOwedToDriverUSD;
+
+    return {
+      initialUSDTotal,
+      spentFromTripUSD,
+      spentFromDriverPocketUSD,
+      totalAllExpensesUSD: spentFromTripUSD + spentFromDriverPocketUSD,
+      drawerUSD,
+      drawerCOP,
+      drawerVES,
+      remainingTripUSD,
+      previousDebtsUSD,
+      totalOwedToDriverUSD,
+      finalNetBalanceUSD,
+      byCategory
+    };
+  }, [initialAdvance, walletAdjustments, expenses, pendingDebts, tripInfo]);
+
+  // Abrir el modal de una categoría de golpe rápido
+  const openCategoryModal = (catId) => {
+    const cat = CATEGORIES[catId];
+    setActiveCategoryModal(cat);
+    setExpCurrency('USD');
+    setExpAmount('');
+    setExpNote(cat.quickTags[0]);
+    setExpFromDriver(false);
+    setExpHasReceipt(cat.defaultReceipt);
+    setExpPhotoAttached(cat.defaultReceipt);
+  };
+
+  // Sumar billete rápido al monto
+  const handleAddBill = (billValue) => {
+    const current = Number(expAmount) || 0;
+    setExpAmount(String(current + billValue));
+  };
+
+  // Guardar gasto desde el modal rápido
+  const handleSaveExpense = () => {
+    const numAmount = Number(expAmount);
+    if (!numAmount || numAmount <= 0 || !activeCategoryModal) return;
+
+    const usdEq = convertToUSD(numAmount, expCurrency);
+    const rateUsed =
+      expCurrency === 'USD' ? 1 : expCurrency === 'COP' ? tripInfo.rateCOP : tripInfo.rateVES;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+
+    const newExp = {
+      id: `exp-${Date.now()}`,
+      category: activeCategoryModal.id,
+      note: expNote || activeCategoryModal.shortName,
+      currency: expCurrency,
+      amount: numAmount,
+      usdEquivalent: usdEq,
+      rateUsed,
+      fromDriverPocket: expFromDriver,
+      hasReceipt: expHasReceipt,
+      receiptCode: expHasReceipt ? `REC-${Math.floor(100 + Math.random() * 900)}` : null,
+      time: timeStr
+    };
+
+    setExpenses([newExp, ...expenses]);
+    setActiveCategoryModal(null);
+    triggerToast(
+      `✅ Anotado: ${formatCurrencyFull(numAmount, expCurrency)} ($${usdEq.toFixed(2)} USD)`
+    );
+  };
+
+  // Aplicar Vuelto Cruzado (Ej: Paga con $20, gasta $6 y recibe vuelto en $ y COP/Bs)
+  const handleApplySplitChange = () => {
+    const billVal = Number(changeBillGiven) || 0;
+    const gastoUSD = Number(changeExpenseUSD) || 0;
+    if (billVal <= 0 || gastoUSD <= 0) return;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+
+    // 1. Registrar el gasto en USD
+    const newExp = {
+      id: `exp-${Date.now()}`,
+      category: changeExpenseCategory,
+      note: `Pago con billete de ${formatCurrencyFull(billVal, changePaidCurrency)} (Vuelto mixto)`,
+      currency: 'USD',
+      amount: gastoUSD,
+      usdEquivalent: gastoUSD,
+      rateUsed: 1,
+      fromDriverPocket: false,
+      hasReceipt: false,
+      receiptCode: null,
+      time: timeStr
+    };
+
+    // 2. Ajustar las gavetas físicas:
+    // Como el gasto se registró en USD (-gastoUSD en gaveta USD automáticamente),
+    // compensamos para que de la gaveta original salga el billete completo y entren los vueltos reales.
+    const retUSD = Number(changeRetUSD) || 0;
+    const retCOP = Number(changeRetCOP) || 0;
+    const retVES = Number(changeRetVES) || 0;
+
+    setWalletAdjustments((prev) => {
+      const next = { ...prev };
+      // Revertimos el descuento automático de gastoUSD en USD y aplicamos el movimiento físico real
+      next.USD += gastoUSD;
+      if (changePaidCurrency === 'USD') next.USD -= billVal;
+      if (changePaidCurrency === 'COP') next.COP -= billVal;
+      if (changePaidCurrency === 'VES') next.VES -= billVal;
+
+      next.USD += retUSD;
+      next.COP += retCOP;
+      next.VES += retVES;
+      return next;
+    });
+
+    setExpenses([newExp, ...expenses]);
+    setShowChangeModal(false);
+    triggerToast('🔄 Vuelto cruzado aplicado y gavetas actualizadas');
+  };
+
+  // Procesar comando de voz
+  const handleExecuteVoicePreset = (preset) => {
+    setIsListeningVoice(true);
+    setTimeout(() => {
+      setIsListeningVoice(false);
+      const usdEq = convertToUSD(preset.amount, preset.currency);
+      const rateUsed =
+        preset.currency === 'USD'
+          ? 1
+          : preset.currency === 'COP'
+          ? tripInfo.rateCOP
+          : tripInfo.rateVES;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+
+      const newExp = {
+        id: `exp-${Date.now()}`,
+        category: preset.category,
+        note: preset.note,
+        currency: preset.currency,
+        amount: preset.amount,
+        usdEquivalent: usdEq,
+        rateUsed,
+        fromDriverPocket: preset.fromDriverPocket,
+        hasReceipt: preset.hasReceipt,
+        receiptCode: preset.hasReceipt ? `VOZ-REC-${Math.floor(100 + Math.random() * 899)}` : null,
+        time: timeStr
+      };
+
+      setExpenses([newExp, ...expenses]);
+      setShowVoiceModal(false);
+      triggerToast(`🎙️ Nota de voz registrada: $${usdEq.toFixed(2)} USD`);
+    }, 650);
+  };
+
+  // Generar texto formateado para WhatsApp
+  const generateWhatsAppText = () => {
+    const lines = [
+      `🚛 *LIQUIDACIÓN DE VIAJE — RUTACUADRE PRO*`,
+      `📍 *Ruta:* ${tripInfo.route} | *Unidad:* ${tripInfo.truckPlate}`,
+      `💱 *Tasas:* ${tripInfo.rateCOP.toLocaleString()} COP/$ | ${tripInfo.rateVES} Bs/$`,
+      `────────────────────`,
+      `*1. RESUMEN DE FONDOS (UNIFICADO USD)*`,
+      `• Anticipo Recibido: *$${summary.initialUSDTotal.toFixed(2)}*`,
+      `• Gastado del Viático: *-$${summary.spentFromTripUSD.toFixed(2)}*`,
+      `• Sobrante en Mano: *+$${summary.remainingTripUSD.toFixed(2)}*`,
+      `────────────────────`,
+      `*2. DESGLOSE POR CATEGORÍAS*`,
+      `📦 *Caleta / Obreros:* $${summary.byCategory.caleta.usd.toFixed(2)} _(Sin Recibo)_`,
+      `🍔 *Comida y Refrescos:* $${summary.byCategory.comida.usd.toFixed(2)} _(Sin Recibo)_`,
+      `🔧 *Mantenimiento:* $${summary.byCategory.mantenimiento.usd.toFixed(2)} _(Con Soporte)_`,
+      `⛽ *Peajes y Gasoil:* $${summary.byCategory.peaje.usd.toFixed(2)} _(Con Soporte)_`,
+      `────────────────────`,
+      `*3. BOLSILLO DEL CHOFER Y PENDIENTES*`,
+      `👛 Puesto del Bolsillo (Este viaje): *+$${summary.spentFromDriverPocketUSD.toFixed(2)}*`,
+      `📂 Deuda viajes anteriores ("Me deben"): *+$${summary.previousDebtsUSD.toFixed(2)}*`,
+      `• Total a favor del chofer: *$${summary.totalOwedToDriverUSD.toFixed(2)}*`,
+      `────────────────────`,
+      `⚖️ *LIQUIDACIÓN FINAL:*`,
+      summary.finalNetBalanceUSD >= 0
+        ? `👉 *EL CHOFER ENTREGA AL JEFE: $${summary.finalNetBalanceUSD.toFixed(2)} USD*`
+        : `👉 *SALDO A PAGAR AL CHOFER: $${Math.abs(summary.finalNetBalanceUSD).toFixed(2)} USD*`
+    ];
+    return lines.join('\n');
+  };
+
+  // Copiado seguro compatible con iframes y políticas de permisos del navegador
+  const copyTextSafely = async (text) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (err) {
+      // Si el navegador bloquea navigator.clipboard, pasamos al método alternativo
+    }
+
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (fallbackErr) {
+      return false;
+    }
+  };
+
+  const handleCopyWhatsApp = async () => {
+    const text = generateWhatsAppText();
+    await copyTextSafely(text);
+    setCopiedText(true);
+    triggerToast('📲 Resumen copiado listo para pegar en WhatsApp');
+    setTimeout(() => setCopiedText(false), 3000);
+  };
+
+  const handleSendWhatsAppDirect = () => {
+    const text = generateWhatsAppText();
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleAddPendingDebt = () => {
+    const val = Number(newDebtAmount);
+    if (!newDebtTitle.trim() || !val || val <= 0) return;
+    setPendingDebts([
+      ...pendingDebts,
+      {
+        id: `d-${Date.now()}`,
+        title: newDebtTitle.trim(),
+        date: 'Hoy',
+        amountUSD: val,
+        settled: false
+      }
+    ]);
+    setNewDebtTitle('');
+    setNewDebtAmount('');
+    triggerToast('📂 Cuenta agregada al archivo "Me deben"');
+  };
+
+  // Cálculo auxiliar en tiempo real para la calculadora de vuelto
+  const changeCalcSummary = useMemo(() => {
+    const billInUSD = convertToUSD(changeBillGiven, changePaidCurrency);
+    const expenseUSD = Number(changeExpenseUSD) || 0;
+    const expectedChangeUSD = Math.max(0, billInUSD - expenseUSD);
+
+    const receivedUSD =
+      (Number(changeRetUSD) || 0) +
+      convertToUSD(changeRetCOP, 'COP') +
+      convertToUSD(changeRetVES, 'VES');
+
+    const diffUSD = receivedUSD - expectedChangeUSD;
+    return { billInUSD, expectedChangeUSD, receivedUSD, diffUSD };
+  }, [
+    changeBillGiven,
+    changePaidCurrency,
+    changeExpenseUSD,
+    changeRetUSD,
+    changeRetCOP,
+    changeRetVES,
+    tripInfo
+  ]);
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-28 select-none">
+      {/* Notificación flotante superior */}
+      {toastMessage && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-slate-950 font-extrabold px-5 py-3 rounded-2xl shadow-2xl border-2 border-emerald-300 flex items-center gap-2 animate-bounce">
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
+          <span className="text-sm">{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Contenedor central estilo Android Mobile */}
+      <div className="max-w-md mx-auto px-3 pt-3 space-y-3.5">
+        
+        {/* CABECERA: Ruta Activa + Tasas + Píldora "Me deben" */}
+        <header className="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="flex items-center gap-2 text-left group active:scale-95 transition"
+            >
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                <Truck className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                    Ruta Activa
+                  </span>
+                  <Settings className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
+                </div>
+                <h1 className="text-base font-black text-white leading-tight">
+                  {tripInfo.route}
+                </h1>
+              </div>
+            </button>
+
+            {/* Píldora de Alerta: Archivo de Cuentas Pendientes + Bolsillo del Chofer */}
+            <button
+              onClick={() => setShowPendingModal(true)}
+              className={`px-3 py-2 rounded-xl border flex flex-col items-end active:scale-95 transition shadow-md ${
+                summary.totalOwedToDriverUSD > 0
+                  ? 'bg-rose-500/20 border-rose-500/60 text-rose-300'
+                  : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+              }`}
+            >
+              <span className="text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1">
+                <FolderClock className="w-3 h-3" /> Me deben
+              </span>
+              <span className="text-base font-black text-white leading-none mt-0.5">
+                ${summary.totalOwedToDriverUSD.toFixed(2)}
+              </span>
+            </button>
+          </div>
+
+          {/* Barra de Tasas Ancladas del Viaje */}
+          <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-md bg-slate-800 font-semibold text-slate-200">
+                🇨🇴 1$ = {tripInfo.rateCOP.toLocaleString()} COP
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800 font-semibold text-slate-200">
+                🇻🇪 1$ = {tripInfo.rateVES} Bs
+              </span>
+            </div>
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="text-amber-400 font-bold hover:underline text-xs"
+            >
+              Ajustar Tasas / Anticipo
+            </button>
+          </div>
+        </header>
+
+        {/* ZONA 1: TABLERO DE SALDO MAESTRO UNIFICADO + 3 GAVETAS */}
+        <section className="bg-gradient-to-b from-slate-900 to-slate-900/95 border-2 border-slate-800 rounded-3xl p-4 shadow-2xl space-y-3">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                Saldo del Viático (Unificado USD)
+              </p>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <span
+                  className={`text-4xl font-black tracking-tight ${
+                    summary.remainingTripUSD < 25 ? 'text-rose-400' : 'text-emerald-400'
+                  }`}
+                >
+                  ${summary.remainingTripUSD.toFixed(2)}
+                </span>
+                <span className="text-xs font-bold text-slate-400">
+                  de ${summary.initialUSDTotal.toFixed(0)}
+                </span>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <p className="text-[11px] font-bold uppercase text-slate-400">Total Gastado</p>
+              <p className="text-xl font-black text-amber-400">
+                ${summary.totalAllExpensesUSD.toFixed(2)}
+              </p>
+              {summary.spentFromDriverPocketUSD > 0 && (
+                <span className="inline-block text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 px-1.5 py-0.5 rounded">
+                  +${summary.spentFromDriverPocketUSD.toFixed(2)} Mi Bolsillo
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Barra visual de consumo del viático */}
+          <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-300 ${
+                summary.remainingTripUSD < 30 ? 'bg-rose-500' : 'bg-emerald-500'
+              }`}
+              style={{
+                width: `${Math.min(
+                  100,
+                  Math.max(0, (summary.remainingTripUSD / (summary.initialUSDTotal || 1)) * 100)
+                )}%`
+              }}
+            />
+          </div>
+
+          {/* LAS 3 GAVETAS REALES (¿Cómo tengo la plata repartida en la mano?) */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Gavetas del Camión (Plata en mano):
+              </span>
+              <span className="text-[11px] text-slate-400">Triple Moneda ➔ USD</span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {/* Gaveta 1: Efectivo USD */}
+              <div className="bg-slate-950/90 border border-emerald-500/30 rounded-2xl p-2.5">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-400">
+                  <span>💵 USD</span>
+                  <span className="text-[10px] bg-emerald-500/20 px-1.5 rounded">Efectivo</span>
+                </div>
+                <p className="text-lg font-black text-white mt-1">
+                  ${summary.drawerUSD.toFixed(0)}
+                </p>
+                <p className="text-[11px] font-semibold text-slate-400">
+                  Billetes verdes
+                </p>
+              </div>
+
+              {/* Gaveta 2: Pesos Colombianos COP */}
+              <div className="bg-slate-950/90 border border-yellow-500/30 rounded-2xl p-2.5">
+                <div className="flex items-center justify-between text-xs font-bold text-yellow-400">
+                  <span>🇨🇴 COP</span>
+                  <span className="text-[10px] bg-yellow-500/20 px-1.5 rounded">Pesos</span>
+                </div>
+                <p className="text-lg font-black text-white mt-1 truncate">
+                  {formatCOPShort(summary.drawerCOP)}
+                </p>
+                <p className="text-[11px] font-semibold text-emerald-400">
+                  ≈ ${(summary.drawerCOP / tripInfo.rateCOP).toFixed(2)}
+                </p>
+              </div>
+
+              {/* Gaveta 3: Bolívares Bs */}
+              <div className="bg-slate-950/90 border border-cyan-500/30 rounded-2xl p-2.5">
+                <div className="flex items-center justify-between text-xs font-bold text-cyan-400">
+                  <span>🇻🇪 Bs</span>
+                  <span className="text-[10px] bg-cyan-500/20 px-1.5 rounded">PagoMóvil</span>
+                </div>
+                <p className="text-lg font-black text-white mt-1 truncate">
+                  Bs. {summary.drawerVES.toFixed(0)}
+                </p>
+                <p className="text-[11px] font-semibold text-emerald-400">
+                  ≈ ${(summary.drawerVES / tripInfo.rateVES).toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ZONA 2: BOTONERA DE GOLPE RÁPIDO (4 CATEGORÍAS GIGANTES) */}
+        <section>
+          <div className="flex items-center justify-between px-1 mb-2">
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+              Anotar Gasto en 1 Toque (Pulgar Rápido)
+            </h2>
+            <span className="text-[11px] text-amber-400 font-bold">Toque categoría ▾</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {Object.values(CATEGORIES).map((cat) => {
+              const catTotalUSD = summary.byCategory[cat.id]?.usd || 0;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => openCategoryModal(cat.id)}
+                  className={`relative overflow-hidden bg-slate-900 hover:bg-slate-800/90 active:scale-95 transition-all border-2 ${cat.border} rounded-3xl p-4 text-left shadow-xl flex flex-col justify-between min-h-[122px]`}
+                >
+                  <div className="flex items-start justify-between w-full">
+                    <span className="text-4xl drop-shadow">{cat.emoji}</span>
+                    <span className={`text-xs font-black px-2.5 py-1 rounded-full ${cat.bgSoft} ${cat.text}`}>
+                      ${catTotalUSD.toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="mt-3">
+                    <p className="text-base font-black text-white leading-tight">
+                      {cat.shortName}
+                    </p>
+                    <p className="text-[11px] font-semibold text-slate-400 mt-0.5 flex items-center gap-1">
+                      {cat.defaultReceipt ? '📷 Pide Foto/Recibo' : '⚡ Ruta sin factura'}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ZONA 3: BITÁCORA RECIENTE DE CARRETERA */}
+        <section className="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wide text-white">
+                Bitácora de Ruta ({expenses.length})
+              </h3>
+              <p className="text-xs text-slate-400">
+                Cada gasto congela su valor en dólares al momento
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCuadreModal(true)}
+              className="text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1.5 rounded-xl active:scale-95"
+            >
+              Ver Hoja Cuadre ➔
+            </button>
+          </div>
+
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            {expenses.length === 0 ? (
+              <div className="text-center py-8 text-slate-500 text-sm">
+                No hay gastos registrados en este viaje todavía.
+              </div>
+            ) : (
+              expenses.map((item) => {
+                const cat = CATEGORIES[item.category] || CATEGORIES.comida;
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-slate-950/90 border border-slate-800/90 rounded-2xl p-3 flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-11 h-11 rounded-2xl ${cat.bgSoft} flex items-center justify-center text-2xl shrink-0`}>
+                        {cat.emoji}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-sm font-extrabold text-white truncate">
+                            {item.note}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400">
+                            • {item.time}
+                          </span>
+                        </div>
+
+                        {/* Etiquetas de Bolsillo y Factura */}
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          {item.fromDriverPocket ? (
+                            <span className="text-[10px] font-extrabold bg-purple-500/25 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded-md">
+                              👛 De mi Bolsillo
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md">
+                              🚛 Plata del Viaje
+                            </span>
+                          )}
+
+                          {item.hasReceipt ? (
+                            <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                              📷 Con Factura
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold bg-amber-500/15 text-amber-300 px-2 py-0.5 rounded-md">
+                              ⚡ Sin Recibo
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="text-right">
+                        <p className="text-base font-black text-white">
+                          ${item.usdEquivalent.toFixed(2)}
+                        </p>
+                        {item.currency !== 'USD' && (
+                          <p className="text-[11px] font-bold text-slate-400">
+                            {formatCurrencyFull(item.amount, item.currency)}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setExpenses(expenses.filter((e) => e.id !== item.id));
+                          triggerToast('🗑️ Gasto eliminado de la bitácora');
+                        }}
+                        className="p-2 text-slate-500 hover:text-rose-400 active:scale-90"
+                        title="Eliminar gasto"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* ZONA INFERIOR FIJA: BARRA DE ACCIÓN RÁPIDA PARA EL PULGAR */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur-md border-t-2 border-slate-800 px-3 py-2">
+        <div className="max-w-md mx-auto grid grid-cols-3 gap-2 items-center">
+          {/* Botón Izquierdo: Vuelto y Sencillo Cruzado */}
+          <button
+            onClick={() => setShowChangeModal(true)}
+            className="bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-700 rounded-2xl py-2.5 px-3 flex flex-col items-center justify-center transition"
+          >
+            <RefreshCw className="w-5 h-5 text-cyan-400" />
+            <span className="text-xs font-extrabold text-white mt-1">Vuelto / Sencillo</span>
+            <span className="text-[10px] text-slate-400">Cambio cruzado</span>
+          </button>
+
+          {/* Botón Central Sobresaliente: Walkie-Talkie Nota de Voz */}
+          <button
+            onClick={() => setShowVoiceModal(true)}
+            className="-mt-6 bg-gradient-to-b from-amber-400 to-amber-600 text-slate-950 active:scale-95 rounded-3xl py-3 px-4 shadow-xl shadow-amber-500/25 border-4 border-slate-950 flex flex-col items-center justify-center transition"
+          >
+            <Mic className="w-7 h-7 stroke-[2.5]" />
+            <span className="text-xs font-black uppercase tracking-tight mt-0.5">
+              Nota de Voz
+            </span>
+          </button>
+
+          {/* Botón Derecho: Cerrar y Generar Hoja de Cuadre */}
+          <button
+            onClick={() => setShowCuadreModal(true)}
+            className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-slate-950 rounded-2xl py-2.5 px-3 flex flex-col items-center justify-center transition shadow-lg shadow-emerald-600/20"
+          >
+            <FileText className="w-5 h-5 stroke-[2.5]" />
+            <span className="text-xs font-black mt-1">Cerrar Cuadre</span>
+            <span className="text-[10px] font-bold text-emerald-950">Ticket + WhatsApp</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* =====================================================================
+          MODAL 1: REGISTRO DE GASTO EN 3 SEGUNDOS (POR CATEGORÍA)
+         ===================================================================== */}
+      {activeCategoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-900 border-t-2 sm:border-2 border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 animate-in slide-in-from-bottom duration-200 max-h-[92vh] overflow-y-auto">
+            {/* Cabecera del Modal */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="text-3xl">{activeCategoryModal.emoji}</span>
+                <div>
+                  <h3 className="text-lg font-black text-white leading-none">
+                    {activeCategoryModal.name}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Seleccione moneda y toque los billetes rápidos
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveCategoryModal(null)}
+                className="p-2 rounded-full bg-slate-800 text-slate-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 1. Selector Gigante de Triple Moneda */}
+            <div className="grid grid-cols-3 gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+              {[
+                { id: 'USD', label: '💵 USD ($)', sub: 'Dólares' },
+                { id: 'COP', label: '🇨🇴 COP', sub: 'Pesos Col.' },
+                { id: 'VES', label: '🇻🇪 Bs', sub: 'Bolívares' }
+              ].map((curr) => (
+                <button
+                  key={curr.id}
+                  onClick={() => {
+                    setExpCurrency(curr.id);
+                    setExpAmount('');
+                  }}
+                  className={`py-2.5 rounded-xl font-black text-xs transition flex flex-col items-center ${
+                    expCurrency === curr.id
+                      ? 'bg-amber-500 text-slate-950 shadow-md'
+                      : 'text-slate-300 hover:bg-slate-900'
+                  }`}
+                >
+                  <span>{curr.label}</span>
+                  <span className="text-[10px] opacity-80">{curr.sub}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* 2. Visor del Monto + Equivalencia en vivo a USD */}
+            <div className="bg-slate-950 border-2 border-slate-800 rounded-2xl p-3 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase text-slate-400">
+                  Monto en {expCurrency}
+                </span>
+                <div className="flex items-baseline gap-2">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={expAmount}
+                    onChange={(e) => setExpAmount(e.target.value)}
+                    className="bg-transparent text-3xl font-black text-white w-44 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold uppercase text-slate-400">
+                  Equivale en Cuadre
+                </span>
+                <p className="text-2xl font-black text-emerald-400">
+                  ${convertToUSD(expAmount, expCurrency).toFixed(2)} USD
+                </p>
+                {expAmount && (
+                  <button
+                    onClick={() => setExpAmount('')}
+                    className="text-xs font-bold text-rose-400 underline mt-0.5"
+                  >
+                    Borrar monto
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 3. Teclado de Billetes Reales Dinámicos */}
+            <div>
+              <span className="text-[11px] font-extrabold uppercase text-slate-400 block mb-1.5">
+                Sumar Billetes Rápidos ({expCurrency}):
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                {QUICK_BILLS[expCurrency].map((bill) => (
+                  <button
+                    key={bill.label}
+                    onClick={() => handleAddBill(bill.value)}
+                    className="bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-600 rounded-xl py-3 text-base font-black text-emerald-300 shadow"
+                  >
+                    {bill.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 4. Etiquetas rápidas de detalle sin usar teclado */}
+            <div>
+              <span className="text-[11px] font-extrabold uppercase text-slate-400 block mb-1.5">
+                Detalle rápido (1 toque):
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {activeCategoryModal.quickTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setExpNote(tag)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                      expNote === tag
+                        ? 'bg-white text-slate-950 border-white font-black'
+                        : 'bg-slate-950 text-slate-300 border-slate-800'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 5. Los Dos Interruptores Inteligentes: Origen del Dinero y Soporte */}
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              {/* Switch 1: Plata del viaje vs Mi Bolsillo */}
+              <div className="bg-slate-950 border border-slate-800 p-2.5 rounded-2xl">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5">
+                  ¿De dónde salió la plata?
+                </span>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <button
+                    onClick={() => setExpFromDriver(false)}
+                    className={`py-2 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 border ${
+                      !expFromDriver
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                        : 'bg-slate-900 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    🚛 Plata del Viaje
+                  </button>
+                  <button
+                    onClick={() => setExpFromDriver(true)}
+                    className={`py-2 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 border ${
+                      expFromDriver
+                        ? 'bg-purple-500/30 border-purple-400 text-purple-200'
+                        : 'bg-slate-900 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    👛 De mi Bolsillo
+                  </button>
+                </div>
+              </div>
+
+              {/* Switch 2: Con Factura vs Sin Recibo */}
+              <div className="bg-slate-950 border border-slate-800 p-2.5 rounded-2xl">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5">
+                  ¿Tiene factura o recibo?
+                </span>
+                <div className="grid grid-cols-1 gap-1.5">
+                  <button
+                    onClick={() => {
+                      setExpHasReceipt(false);
+                      setExpPhotoAttached(false);
+                    }}
+                    className={`py-2 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 border ${
+                      !expHasReceipt
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                        : 'bg-slate-900 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    ⚡ Sin Recibo (Ruta)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setExpHasReceipt(true);
+                      setExpPhotoAttached(true);
+                    }}
+                    className={`py-2 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 border ${
+                      expHasReceipt
+                        ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200'
+                        : 'bg-slate-900 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    📷 {expPhotoAttached ? 'Foto Adjunta ✓' : 'Con Factura'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Botón Guardar Gasto */}
+            <button
+              onClick={handleSaveExpense}
+              disabled={!expAmount || Number(expAmount) <= 0}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 disabled:opacity-40 text-slate-950 font-black text-lg shadow-xl active:scale-98 transition"
+            >
+              GUARDAR GASTO (${convertToUSD(expAmount, expCurrency).toFixed(2)} USD)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 2: CALCULADORA DE VUELTO Y SENCILLO CRUZADO
+         ===================================================================== */}
+      {showChangeModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-900 border-t-2 sm:border-2 border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                  <RefreshCw className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">
+                    Calculadora de Vuelto Cruzado
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Paga con billete grande y reparte el vuelto en $, COP y Bs
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowChangeModal(false)}
+                className="p-2 rounded-full bg-slate-800 text-slate-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Paso 1: ¿Con qué billete pagaste? */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2">
+              <span className="text-xs font-extrabold uppercase text-cyan-400">
+                1. ¿Qué billete entregaste de tu gaveta?
+              </span>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { cur: 'USD', val: 10, label: '$10 USD' },
+                  { cur: 'USD', val: 20, label: '$20 USD' },
+                  { cur: 'USD', val: 50, label: '$50 USD' },
+                  { cur: 'COP', val: 50000, label: '50 mil COP' }
+                ].map((b, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setChangePaidCurrency(b.cur);
+                      setChangeBillGiven(b.val);
+                    }}
+                    className={`py-2.5 px-2 rounded-xl font-black text-xs border ${
+                      changePaidCurrency === b.cur && Number(changeBillGiven) === b.val
+                        ? 'bg-cyan-500 text-slate-950 border-cyan-300'
+                        : 'bg-slate-900 text-slate-300 border-slate-700'
+                    }`}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Paso 2: ¿Cuánto costó el gasto y en qué categoría? */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2">
+              <span className="text-xs font-extrabold uppercase text-amber-400">
+                2. ¿Cuánto fue el gasto real (en USD)?
+              </span>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center bg-slate-900 border border-slate-700 rounded-xl px-3 py-2">
+                    <span className="text-slate-400 font-bold mr-1">$</span>
+                    <input
+                      type="number"
+                      value={changeExpenseUSD}
+                      onChange={(e) => setChangeExpenseUSD(e.target.value)}
+                      className="bg-transparent text-xl font-black text-white w-full focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <select
+                  value={changeExpenseCategory}
+                  onChange={(e) => setChangeExpenseCategory(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-white"
+                >
+                  <option value="comida">🍔 Comida / Refresco</option>
+                  <option value="caleta">📦 Caleta / Obreros</option>
+                  <option value="mantenimiento">🔧 Mantenimiento</option>
+                  <option value="peaje">⛽ Peaje / Gasoil</option>
+                </select>
+              </div>
+              <p className="text-xs text-slate-300">
+                Te deben dar de vuelto:{' '}
+                <strong className="text-emerald-400 font-black">
+                  ${changeCalcSummary.expectedChangeUSD.toFixed(2)} USD
+                </strong>{' '}
+                (ó {(changeCalcSummary.expectedChangeUSD * tripInfo.rateCOP).toLocaleString()} COP)
+              </p>
+            </div>
+
+            {/* Paso 3: ¿Cómo te entregaron el vuelto? */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+              <span className="text-xs font-extrabold uppercase text-emerald-400">
+                3. ¿Cómo recibiste el vuelto?
+              </span>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    💵 En Dólares ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={changeRetUSD}
+                    onChange={(e) => setChangeRetUSD(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-base font-black text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    🇨🇴 En Pesos (COP)
+                  </label>
+                  <input
+                    type="number"
+                    step="1000"
+                    value={changeRetCOP}
+                    onChange={(e) => setChangeRetCOP(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-base font-black text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 block mb-1">
+                    🇻🇪 PagoMóvil (Bs)
+                  </label>
+                  <input
+                    type="number"
+                    value={changeRetVES}
+                    onChange={(e) => setChangeRetVES(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-base font-black text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-1 flex items-center justify-between text-xs">
+                <span className="text-slate-400">
+                  Total vuelto recibido:{' '}
+                  <strong className="text-white">
+                    ${changeCalcSummary.receivedUSD.toFixed(2)} USD
+                  </strong>
+                </span>
+                {Math.abs(changeCalcSummary.diffUSD) < 0.05 ? (
+                  <span className="text-emerald-400 font-extrabold">✓ Vuelto Exacto</span>
+                ) : (
+                  <span className="text-amber-400 font-bold">
+                    Diferencia: ${changeCalcSummary.diffUSD.toFixed(2)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={handleApplySplitChange}
+              className="w-full py-3.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-base shadow-lg"
+            >
+              APLICAR VUELTO Y ACTUALIZAR 3 GAVETAS
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 3: NOTA DE VOZ MANOS LIBRES (WALKIE-TALKIE)
+         ===================================================================== */}
+      {showVoiceModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-900 border-t-2 sm:border-2 border-amber-500/50 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center">
+                  <Mic className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">
+                    Registro por Voz Manos Libres
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Habla o toca una frase rápida sin escribir en carretera
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowVoiceModal(false)}
+                className="p-2 rounded-full bg-slate-800 text-slate-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Indicador de Ondas de Voz */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-center space-y-2">
+              <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-400 mx-auto flex items-center justify-center animate-pulse">
+                <Mic className="w-8 h-8 text-amber-400" />
+              </div>
+              <p className="text-sm font-bold text-white">
+                {isListeningVoice
+                  ? 'Procesando audio y convirtiendo moneda...'
+                  : 'Toca un comando de voz de ejemplo para probar cómo lo anota:'}
+              </p>
+            </div>
+
+            {/* Comandos reales de prueba con 1 toque */}
+            <div className="space-y-2">
+              {VOICE_PRESETS.map((preset, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleExecuteVoicePreset(preset)}
+                  className="w-full bg-slate-950 hover:bg-slate-800 active:scale-98 border border-slate-800 rounded-2xl p-3 text-left flex items-center justify-between transition"
+                >
+                  <div>
+                    <p className="text-sm font-extrabold text-amber-300">
+                      🎙️ {preset.phrase}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Categoría: {CATEGORIES[preset.category].shortName} •{' '}
+                      {preset.fromDriverPocket ? '👛 Mi Bolsillo' : '🚛 Plata del Viaje'}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 4: ARCHIVO DE CUENTAS PENDIENTES ("ME DEBEN")
+         ===================================================================== */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-900 border-t-2 sm:border-2 border-rose-500/40 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-extrabold uppercase text-rose-400">
+                  Control Personal del Chofer
+                </span>
+                <h3 className="text-lg font-black text-white">
+                  Archivo "Me Deben" y Mi Bolsillo
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowPendingModal(false)}
+                className="p-2 rounded-full bg-slate-800 text-slate-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Resumen del bolsillo actual + deudas pasadas */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">Puesto de mi bolsillo en este viaje:</span>
+                <span className="font-black text-purple-300">
+                  +${summary.spentFromDriverPocketUSD.toFixed(2)} USD
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">Deudas pendientes viajes anteriores:</span>
+                <span className="font-black text-rose-300">
+                  +${summary.previousDebtsUSD.toFixed(2)} USD
+                </span>
+              </div>
+              <div className="pt-2 border-t border-slate-800 flex justify-between items-baseline">
+                <span className="text-xs font-extrabold uppercase text-white">
+                  Total Acumulado a mi Favor:
+                </span>
+                <span className="text-xl font-black text-emerald-400">
+                  ${summary.totalOwedToDriverUSD.toFixed(2)} USD
+                </span>
+              </div>
+            </div>
+
+            {/* Lista de deudas de viajes anteriores */}
+            <div className="space-y-2">
+              <span className="text-xs font-extrabold uppercase text-slate-400">
+                Saldos de Viajes Anteriores:
+              </span>
+              {pendingDebts.map((debt) => (
+                <div
+                  key={debt.id}
+                  className={`p-3 rounded-2xl border flex items-center justify-between ${
+                    debt.settled
+                      ? 'bg-slate-950/40 border-slate-800 opacity-50'
+                      : 'bg-slate-950 border-slate-800'
+                  }`}
+                >
+                  <div>
+                    <p className="text-sm font-bold text-white">{debt.title}</p>
+                    <p className="text-xs text-slate-400">{debt.date}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-black text-rose-400">
+                      ${debt.amountUSD.toFixed(2)}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setPendingDebts(
+                          pendingDebts.map((d) =>
+                            d.id === debt.id ? { ...d, settled: !d.settled } : d
+                          )
+                        );
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                        debt.settled
+                          ? 'bg-slate-800 text-slate-400'
+                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      }`}
+                    >
+                      {debt.settled ? 'Pagado ✓' : 'Marcar Pagado'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Agregar saldo pendiente anterior */}
+            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-2">
+              <span className="text-xs font-bold text-slate-300 block">
+                + Anotar deuda pendiente de otro viaje:
+              </span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ej. Viaje Barinas repuesto"
+                  value={newDebtTitle}
+                  onChange={(e) => setNewDebtTitle(e.target.value)}
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                />
+                <input
+                  type="number"
+                  placeholder="$ USD"
+                  value={newDebtAmount}
+                  onChange={(e) => setNewDebtAmount(e.target.value)}
+                  className="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white"
+                />
+              </div>
+              <button
+                onClick={handleAddPendingDebt}
+                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl"
+              >
+                Guardar en Archivo "Me deben"
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 5: HOJA DE CUADRE FINAL (TICKET DIGITAL + TEXTO WHATSAPP)
+         ===================================================================== */}
+      {showCuadreModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-900 border-t-2 sm:border-2 border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-4 space-y-4 max-h-[94vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">
+                  Cuadre Unificado a Dólares ($ USD)
+                </span>
+                <h3 className="text-lg font-black text-white">
+                  Hoja de Liquidación Lista
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowCuadreModal(false)}
+                className="p-2 rounded-full bg-slate-800 text-slate-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* TARJETA VISUAL ESTILO TICKET / RECIBO DIGITAL PARA CAPTURA O IMAGEN */}
+            <div className="bg-slate-100 text-slate-900 rounded-2xl p-4 shadow-2xl border-t-8 border-emerald-600 font-mono text-xs space-y-3">
+              <div className="text-center border-b border-dashed border-slate-400 pb-2">
+                <p className="font-black text-sm tracking-tight">
+                  🚛 LIQUIDACIÓN DE VIAJE — RUTA CERRADA
+                </p>
+                <p className="text-[11px] font-bold text-slate-600">
+                  Ruta: {tripInfo.route} | Unidad: {tripInfo.truckPlate}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Tasas aplicadas: {tripInfo.rateCOP.toLocaleString()} COP/$ | {tripInfo.rateVES} Bs/$
+                </p>
+              </div>
+
+              {/* 1. Resumen de Fondos */}
+              <div className="space-y-1 border-b border-dashed border-slate-400 pb-2">
+                <p className="font-black text-[11px] text-slate-700">
+                  1. RESUMEN DE FONDOS (UNIFICADO EN USD)
+                </p>
+                <div className="flex justify-between">
+                  <span>Anticipo Recibido (Total en $):</span>
+                  <span className="font-bold">${summary.initialUSDTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-rose-700">
+                  <span>Total Gastado del Viático:</span>
+                  <span className="font-bold">-${summary.spentFromTripUSD.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-black text-slate-900 pt-0.5">
+                  <span>Sobrante del Anticipo en Mano:</span>
+                  <span>+${summary.remainingTripUSD.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* 2. Desglose por Categorías */}
+              <div className="space-y-1.5 border-b border-dashed border-slate-400 pb-2">
+                <p className="font-black text-[11px] text-slate-700">
+                  2. DESGLOSE POR CATEGORÍAS (CON EQUIVALENCIA)
+                </p>
+                {Object.values(CATEGORIES).map((cat) => {
+                  const data = summary.byCategory[cat.id];
+                  return (
+                    <div key={cat.id} className="bg-slate-200/70 rounded-lg p-1.5">
+                      <div className="flex justify-between font-bold">
+                        <span>
+                          {cat.emoji} {cat.name}:
+                        </span>
+                        <span>${data.usd.toFixed(2)}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-600 flex justify-between mt-0.5">
+                        <span>
+                          Pagado: ${data.rawUSD} | {formatCOPShort(data.rawCOP)} COP | Bs.{data.rawVES}
+                        </span>
+                        <span>
+                          {data.withReceipt > 0 ? '📎 Con Factura' : 'Sin Factura'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 3. Cruce con Bolsillo del Chofer y Cuentas Pendientes */}
+              <div className="space-y-1 border-b border-dashed border-slate-400 pb-2">
+                <p className="font-black text-[11px] text-slate-700">
+                  3. CRUCE BOLSILLO CHOFER Y CUENTAS PENDIENTES
+                </p>
+                <div className="flex justify-between">
+                  <span>👛 Puesto Bolsillo Chofer (Este viaje):</span>
+                  <span className="font-bold">+${summary.spentFromDriverPocketUSD.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>📂 Deuda acumulada ("Me deben"):</span>
+                  <span className="font-bold">+${summary.previousDebtsUSD.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* 4. Veredicto de Liquidación Final */}
+              <div
+                className={`p-2.5 rounded-xl text-center ${
+                  summary.finalNetBalanceUSD >= 0
+                    ? 'bg-amber-100 border border-amber-400 text-amber-950'
+                    : 'bg-emerald-100 border border-emerald-500 text-emerald-950'
+                }`}
+              >
+                <p className="text-[10px] font-bold uppercase">
+                  ⚖️ LIQUIDACIÓN FINAL UNIFICADA
+                </p>
+                {summary.finalNetBalanceUSD >= 0 ? (
+                  <>
+                    <p className="text-sm font-black mt-0.5">
+                      EL CHOFER DEVUELVE AL JEFE: ${summary.finalNetBalanceUSD.toFixed(2)} USD
+                    </p>
+                    <p className="text-[10px] mt-0.5">
+                      (Ya descontados los ${summary.totalOwedToDriverUSD.toFixed(2)} que se le debían al chofer)
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-black mt-0.5">
+                      SALDO A FAVOR DEL CHOFER (A PAGARLE): $
+                      {Math.abs(summary.finalNetBalanceUSD).toFixed(2)} USD
+                    </p>
+                    <p className="text-[10px] mt-0.5">
+                      (El chofer se queda con el sobrante y el jefe le abona la diferencia)
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Botones de Acción para Compartir por WhatsApp */}
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                onClick={handleCopyWhatsApp}
+                className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg active:scale-98 transition"
+              >
+                {copiedText ? (
+                  <>
+                    <Check className="w-5 h-5" /> ¡RESUMEN COPIADO AL PORTAPAPELES!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-5 h-5" /> COPIAR TEXTO RESUMEN PARA WHATSAPP
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleSendWhatsAppDirect}
+                className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-2 active:scale-98 transition"
+              >
+                <Share2 className="w-4 h-4" /> ABRIR DIRECTO EN WHATSAPP
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 6: AJUSTE DE TASAS Y ANTICIPO DEL VIAJE
+         ===================================================================== */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-900 border-t-2 sm:border-2 border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black text-white">
+                Configurar Tasas y Anticipo del Viaje
+              </h3>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="p-2 rounded-full bg-slate-800 text-slate-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-400 block mb-1">
+                  Nombre de la Ruta
+                </label>
+                <input
+                  type="text"
+                  value={tripInfo.route}
+                  onChange={(e) => setTripInfo({ ...tripInfo, route: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm font-bold text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="text-xs font-bold text-yellow-400 block mb-1">
+                    🇨🇴 Tasa COP por 1 USD
+                  </label>
+                  <input
+                    type="number"
+                    value={tripInfo.rateCOP}
+                    onChange={(e) =>
+                      setTripInfo({ ...tripInfo, rateCOP: Number(e.target.value) || 1 })
+                    }
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-base font-black text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-cyan-400 block mb-1">
+                    🇻🇪 Tasa Bs por 1 USD
+                  </label>
+                  <input
+                    type="number"
+                    value={tripInfo.rateVES}
+                    onChange={(e) =>
+                      setTripInfo({ ...tripInfo, rateVES: Number(e.target.value) || 1 })
+                    }
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-base font-black text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800">
+                <span className="text-xs font-extrabold uppercase text-emerald-400 block mb-2">
+                  Anticipo Entregado al Abrir Viaje (En cada gaveta):
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-[11px] text-slate-400 block">💵 Efectivo $</label>
+                    <input
+                      type="number"
+                      value={initialAdvance.USD}
+                      onChange={(e) =>
+                        setInitialAdvance({ ...initialAdvance, USD: Number(e.target.value) || 0 })
+                      }
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-sm font-black text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-400 block">🇨🇴 Pesos COP</label>
+                    <input
+                      type="number"
+                      value={initialAdvance.COP}
+                      onChange={(e) =>
+                        setInitialAdvance({ ...initialAdvance, COP: Number(e.target.value) || 0 })
+                      }
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-sm font-black text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-400 block">🇻🇪 Bolívares</label>
+                    <input
+                      type="number"
+                      value={initialAdvance.VES}
+                      onChange={(e) =>
+                        setInitialAdvance({ ...initialAdvance, VES: Number(e.target.value) || 0 })
+                      }
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-sm font-black text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowSettingsModal(false);
+                triggerToast('⚙️ Tasas y anticipo actualizados');
+              }}
+              className="w-full py-3.5 rounded-2xl bg-amber-500 text-slate-950 font-black text-sm"
+            >
+              GUARDAR CONFIGURACIÓN
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
